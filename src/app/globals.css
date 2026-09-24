@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* ================================================================
+   Data Edge · Design System
+   Azul profundo + turquesa + blanco. Tipografía: Fraunces (títulos)
+   y Manrope (interfaz y cifras).
+   ================================================================ */
+@theme {
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+
+  --color-navy-950: #051226;
+  --color-navy-900: #0a1f3c;
+  --color-navy-800: #0f2a4f;
+  --color-navy-700: #173a66;
+  --color-navy-600: #22497f;
+  --color-navy-500: #3a6299;
+
+  --color-teal-200: #b5f1e8;
+  --color-teal-300: #7ce7d8;
+  --color-teal-400: #3dd6c2;
+  --color-teal-500: #14bfa8;
+  --color-teal-600: #0e9f8c;
+  --color-teal-700: #0b7f71;
+  --color-teal-50: #ebfbf8;
+
+  --color-canvas: #f4f6fa;
+  --color-surface: #ffffff;
+  --color-line: #e3e8ef;
+  --color-line-strong: #cfd7e3;
+  --color-ink: #0b1628;
+  --color-ink-2: #3b4a60;
+  --color-muted: #66758b;
+
+  --color-positive: #0e9f6e;
+  --color-positive-50: #e8f7f1;
+  --color-negative: #d64545;
+  --color-negative-50: #fdeeee;
+  --color-warning: #b87503;
+  --color-warning-50: #fdf4e3;
+
+  /* Series de gráficos (validadas para daltonismo) */
+  --color-series-in: #0e9f8c;
+  --color-series-out: #e0694a;
+
+  --radius-card: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(11 22 40 / 0.04), 0 8px 24px -12px rgb(11 22 40 / 0.12);
+  --shadow-pop: 0 20px 50px -20px rgb(5 18 38 / 0.45);
+
+  --animate-fade-up: fade-up 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-teal-500);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-teal-200);
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
+
+@utility card {
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+@utility skeleton {
+  background: linear-gradient(90deg, #eef1f6 0%, #f7f9fc 50%, #eef1f6 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite linear;
+  border-radius: 0.5rem;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
