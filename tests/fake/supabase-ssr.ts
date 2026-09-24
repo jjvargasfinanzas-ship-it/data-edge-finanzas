@@ -13,12 +13,12 @@ const uuid = () => `00000000-0000-4000-9000-${String(++seq).padStart(12, "0")}`;
 
 function seed() {
   const db: Record<string, Row[]> = {
-    profiles: [], accounts: [], categories: [], planned_items: [], transactions: [], calendar_events: [], exchange_rates: [], audit_logs: [],
+    profiles: [], accounts: [], categories: [], planned_items: [], transactions: [], calendar_events: [], exchange_rates: [], audit_logs: [], planned_occurrence_status: [],
   };
   const onboarded = process.env.DE_FAKE_ONBOARDED !== "0";
   db.profiles.push({
     id: USER, first_name: "Juan", last_name: "Vargas", email: "juan@ejemplo.co", country: "CO", city: "Medellín", base_currency: "COP",
-    timezone: "America/Bogota", avatar_url: null, main_goal: onboarded ? "organize_expenses" : null,
+    timezone: "America/Bogota", avatar_url: null, theme: process.env.DE_FAKE_THEME ?? "data-edge", main_goal: onboarded ? "organize_expenses" : null,
     onboarding_completed_at: onboarded ? now() : null, status: "active", created_at: "2026-09-01T12:00:00Z", updated_at: now(),
   });
   const cat = (kind: string, name: string, icon: string, color: string, parent: string | null = null, order = 0) => {
@@ -41,6 +41,7 @@ function seed() {
   cat("expense", "Otros gastos", "circle-dashed", "#64748B", null, 9);
   const salario = cat("income", "Salario", "briefcase", "#14B8A6", null, 20);
   const hon = cat("income", "Honorarios", "file-signature", "#0D9488", null, 21);
+  cat("income", "Pensión", "landmark", "#0EA5E9", null, 22);
 
   const acc = (name: string, type: string, bal: number, extra: Row = {}) => {
     const r = {
@@ -82,15 +83,31 @@ function seed() {
     tx("2026-09-21", "transfer", 500000, banco, { to_account_id: nequi, description: "Recarga Nequi" });
     tx("2026-09-22", "transfer", 1000000, banco, { to_account_id: inv, description: "Aporte fondo" });
 
-    const pl = (name: string, kind: string, amount: number, account_id: string, start_date: string, extra: Row = {}) =>
-      db.planned_items.push({ id: uuid(), user_id: USER, name, kind, amount, account_id, to_account_id: null, category_id: null, frequency: "monthly", start_date, end_date: null, is_active: true, notes: null, created_at: now(), updated_at: now(), ...extra });
-    pl("Salario", "income", 8000000, banco, "2026-01-30", { category_id: salario });
-    pl("Arriendo", "expense", 2000000, banco, "2026-01-01", { category_id: arr });
+    const pl = (name: string, kind: string, amount: number, account_id: string, start_date: string, extra: Row = {}) => {
+      const id = uuid();
+      db.planned_items.push({ id, user_id: USER, name, kind, amount, account_id, to_account_id: null, category_id: null, frequency: "monthly", start_date, end_date: null, is_active: true, notes: null, created_at: "2026-08-25T12:00:00Z", updated_at: now(), ...extra });
+      return id;
+    };
+    const salP = pl("Salario", "income", 8000000, banco, "2026-01-30", { category_id: salario });
+    const arrP = pl("Arriendo", "expense", 2000000, banco, "2026-01-01", { category_id: arr });
+    const hon2 = pl("Honorarios consultoría", "income", 1500000, banco, "2026-01-15", { category_id: hon });
+    const pen = pl("Arriendo local (recibo)", "income", 1200000, banco, "2026-01-05", { category_id: hon, end_date: "2027-06-30" });
     pl("Energía EPM", "expense", 190000, nequi, "2026-01-12", { category_id: ene });
     pl("Internet", "expense", 95000, banco, "2026-01-18", { category_id: ser });
     pl("Netflix", "expense", 45000, visa, "2026-01-06", { category_id: sus });
     pl("Aporte fondo", "transfer", 500000, banco, "2026-01-10", { to_account_id: inv });
     pl("Seguro vehículo", "expense", 1850000, banco, "2026-10-28", { frequency: "yearly", category_id: sal });
+    // Vincular movimientos reales a sus programados (septiembre)
+    const link = (desc: string, pid: string, date: string) => {
+      const t = db.transactions.find((x) => x.description === desc && x.date.startsWith("2026-09"));
+      if (t) Object.assign(t, { planned_item_id: pid, planned_date: date });
+    };
+    link("Arriendo septiembre", arrP, "2026-09-01");
+    const ago = db.transactions.find((x) => x.description === "Salario agosto");
+    if (ago) Object.assign(ago, { planned_item_id: salP, planned_date: "2026-08-30" });
+    link("Honorarios consultoría", hon2, "2026-09-15");
+    // Honorarios de sept: se recibieron 1.500.000 completos; arriendo del local: parcial
+    db.transactions.push({ id: uuid(), user_id: USER, kind: "income", date: "2026-09-06", amount: 1000000, account_id: banco, to_account_id: null, to_amount: null, category_id: hon, description: "Arriendo local", notes: null, planned_item_id: pen, planned_date: "2026-09-05", created_at: now(), updated_at: now() });
     const ev = (title: string, event_type: string, event_date: string, frequency = "once") =>
       db.calendar_events.push({ id: uuid(), user_id: USER, title, event_type, event_date, event_time: null, frequency, end_date: null, remind_days_before: 0, notes: null, created_at: now(), updated_at: now() });
     ev("Cumpleaños María", "birthday", "1990-10-02", "yearly");
@@ -146,7 +163,8 @@ class Query {
     return this;
   }
   insert(p: any) { this.mode = "insert"; this.payload = p; return this; }
-  upsert(p: any) { this.mode = "upsert"; this.payload = p; return this; }
+  private conflict: string[] = [];
+  upsert(p: any, o?: { onConflict?: string }) { this.mode = "upsert"; this.payload = p; this.conflict = o?.onConflict?.split(",") ?? []; return this; }
   update(p: any) { this.mode = "update"; this.payload = p; return this; }
   delete() { this.mode = "delete"; return this; }
   eq(c: string, v: any) { this.filters.push((r) => r[c] === v); return this; }
@@ -187,6 +205,16 @@ class Query {
     let data: any;
     let count: number | null = null;
     if (this.mode === "insert" || this.mode === "upsert") {
+      if (this.mode === "upsert" && this.conflict.length) {
+        const raw = Array.isArray(this.payload) ? this.payload : [this.payload];
+        const rest: Row[] = [];
+        for (const r of raw) {
+          const hit = all.find((x) => this.conflict.every((c) => (x[c] ?? null) === (r[c] ?? null) || (c === "user_id" && r[c] === undefined)));
+          if (hit) Object.assign(hit, r);
+          else rest.push(r);
+        }
+        this.payload = rest;
+      }
       const items = (Array.isArray(this.payload) ? this.payload : [this.payload]).map((r: Row) => this.defaults(r));
       if (this.table === "transactions") {
         for (const it of items) {

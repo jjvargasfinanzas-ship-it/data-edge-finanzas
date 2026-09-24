@@ -2,7 +2,7 @@
 
 **Tu dinero. Bajo control.** Finanzas personales y familiares del ecosistema Data Edge.
 
-Versión actual: **Bloque 1 — Base, movimientos y flujo de caja futuro** (uso personal / validación).
+Versión actual: **Bloque 1.1 — Programado vs. real, posición de caja y paletas** (uso personal / validación).
 
 | Módulo | Estado |
 |---|---|
@@ -12,7 +12,10 @@ Versión actual: **Bloque 1 — Base, movimientos y flujo de caja futuro** (uso 
 | Movimientos (ingresos, gastos, transferencias, filtros, búsqueda, paginación, CSV) | ✅ |
 | Cuentas (bancos, efectivo, billeteras, inversión) con saldo automático y saldo corrido | ✅ |
 | Tarjetas (cupo, utilizado, disponible, corte, pago, alertas, pago en un clic) | ✅ |
-| Programados (ingresos/gastos/pagos recurrentes: semanal, quincenal, mensual… anual) | ✅ |
+| Programación de ingresos y gastos recurrentes (concepto, valor, frecuencia, inicio y fin) | ✅ |
+| **Programado vs. real**: recibido, pendiente, parcial, vencido, omitido y diferencias | ✅ |
+| **Posición de caja**: disponible hoy + por recibir − por pagar = saldo proyectado | ✅ |
+| Paletas de color por usuario (6 opciones) | ✅ |
 | **Flujo de caja futuro** (diario/semanal/mensual, 30–180 días, alerta de saldo negativo) | ✅ |
 | **Calendario financiero** (mes/semana/agenda/día, saldo estimado por día, eventos, cortes y pagos) | ✅ |
 | Multimoneda (COP, USD, EUR, MXN, GBP) con TRM automática y tasa manual | ✅ |
@@ -35,20 +38,20 @@ npm test                     # pruebas unitarias (motor de flujo de caja, recurr
 
 ## Supabase
 
-Proyecto: `data-edge-finanzas` (ref `zkuasrpghsecxedszwxh`). Las migraciones de `supabase/migrations` **ya están aplicadas**.
+Proyecto: `data-edge-finanzas` en la organización personal (ref `dxeuucxauivmbcuzjjxm`). Aplica las migraciones de `supabase/migrations` en orden (SQL Editor o `supabase db push`).
 
 Configuración pendiente en el panel de Supabase (**Authentication**):
 
 1. **URL Configuration**
    - *Site URL*: la URL de producción en Vercel (p. ej. `https://finanzas.dataedgeconsulting.com`).
    - *Redirect URLs*: `http://localhost:3000/**` y `https://*-tu-equipo.vercel.app/**` (previews).
-2. **Email Templates** (recomendado, funciona desde cualquier navegador):
+2. **Email Templates** (requiere SMTP propio; sin él, abre el correo en el mismo navegador donde te registraste):
    - *Confirm signup*: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/bienvenida`
    - *Reset password*: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`
 3. **SMTP**: el correo por defecto de Supabase tiene un límite muy bajo y solo sirve para pruebas. Antes de invitar a otras personas configura un SMTP propio (Resend, Brevo, etc.) en *Project Settings → Authentication → SMTP*.
 4. **Google OAuth** (opcional): habilita el proveedor en *Sign In / Providers* y pon `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`.
 
-Regenerar tipos: `npx supabase gen types typescript --project-id zkuasrpghsecxedszwxh > src/lib/supabase/database.types.ts`.
+Regenerar tipos: `npx supabase gen types typescript --project-id dxeuucxauivmbcuzjjxm > src/lib/supabase/database.types.ts`.
 
 ## Despliegue en Vercel
 
@@ -56,6 +59,13 @@ Regenerar tipos: `npx supabase gen types typescript --project-id zkuasrpghsecxed
 2. Variables de entorno (Production y Preview): todas las de `.env.example`.
    - `SUPABASE_SERVICE_ROLE_KEY` y `CRON_SECRET` solo en el servidor; nunca con prefijo `NEXT_PUBLIC_`.
 3. `vercel.json` programa la actualización de tasas (TRM) de lunes a viernes a las 8:00 a. m. (hora de Colombia).
+
+## Cómo se calculan los saldos
+
+- **Disponible hoy** = saldo de cuentas de banco, efectivo y billeteras con los movimientos **registrados**. Lo programado nunca suma hasta que se marque como recibido o pagado.
+- **Por recibir / Por pagar** = lo programado pendiente hasta la fecha elegida (incluye vencidos de los últimos 45 días y pagos de tarjeta estimados).
+- **Saldo proyectado** = Disponible + Por recibir − Por pagar.
+- Cada ocurrencia programada puede estar: pendiente, hoy, vencida, parcial (se registró una parte), completa, cerrada con diferencia u omitida.
 
 ## Arquitectura
 

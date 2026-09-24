@@ -52,3 +52,10 @@ describe("nextDayOfMonth", () => {
   it("mes siguiente si ya pasó", () => expect(nextDayOfMonth(5, "2026-09-24")).toBe("2026-10-05"));
   it("día 31 en mes corto", () => expect(nextDayOfMonth(31, "2026-11-10")).toBe("2026-11-30"));
 });
+
+import { nextOccurrence } from "@/lib/recurrence";
+describe("nextOccurrence", () => {
+  it("mensual iniciado hace meses", () => expect(nextOccurrence({ frequency: "monthly", start_date: "2026-01-15" }, "2026-09-24")).toBe("2026-10-15"));
+  it("con fecha fin pasada", () => expect(nextOccurrence({ frequency: "monthly", start_date: "2026-01-15", end_date: "2026-08-31" }, "2026-09-24")).toBeNull());
+  it("semanal", () => expect(nextOccurrence({ frequency: "weekly", start_date: "2026-01-01" }, "2026-09-24")).toBe("2026-09-24"));
+});

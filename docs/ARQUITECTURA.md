@@ -46,6 +46,7 @@ profiles 1─n categories          (padre/hijo, mismo tipo)
 profiles 1─n planned_items ─n─1 accounts / categories
 profiles 1─n transactions  ─n─1 accounts (origen y destino) / categories / planned_items
 profiles 1─n calendar_events
+profiles 1─n planned_occurrence_status (cerrada / omitida por fecha)
 exchange_rates                   (globales: user_id nulo · manuales: user_id)
 audit_logs                       (triggers en cuentas, movimientos, programados, categorías)
 ```
@@ -58,7 +59,8 @@ Transferencia = una fila con `account_id` (sale) y `to_account_id` (entra). Paga
 - Gasto con tarjeta no mueve caja; su efecto llega con el pago de la tarjeta.
 - Tarjeta con deuda y sin pago programado antes de su fecha límite → pago estimado por el total de la deuda.
 - Transferencias entre cuentas líquidas no cambian el total; hacia inversión o tarjeta sí.
-- Programados vencidos (últimos 15 días) sin registrar aparecen hoy como pendientes.
+- Programados vencidos (últimos 45 días) sin registrar aparecen hoy como pendientes. Las fechas anteriores a la creación del programado no cuentan.
+- Una ocurrencia puede registrarse en varios pagos: se proyecta solo el saldo que falta. `planned_occurrence_status` guarda si se dio por completa (`closed`) u omitida (`skipped`).
 
 ## Preparado para lo que viene
 

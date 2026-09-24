@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "test": "vitest run",
-    "db:types": "supabase gen types typescript --project-id zkuasrpghsecxedszwxh --schema public > src/lib/supabase/database.types.ts"
+    "db:types": "supabase gen types typescript --project-id dxeuucxauivmbcuzjjxm --schema public > src/lib/supabase/database.types.ts"
   },
   "engines": {
     "node": ">=20"
