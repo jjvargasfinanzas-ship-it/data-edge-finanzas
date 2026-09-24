@@ -1,0 +1,221 @@
+@import "tailwindcss";
+
+/* ================================================================
+   Data Edge · Design System
+   Azul profundo + turquesa + blanco. Tipografía: Fraunces (títulos)
+   y Manrope (interfaz y cifras).
+   ================================================================ */
+@theme {
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+
+  --color-navy-950: #051226;
+  --color-navy-900: #0a1f3c;
+  --color-navy-800: #0f2a4f;
+  --color-navy-700: #173a66;
+  --color-navy-600: #22497f;
+  --color-navy-500: #3a6299;
+
+  --color-teal-200: #b5f1e8;
+  --color-teal-300: #7ce7d8;
+  --color-teal-400: #3dd6c2;
+  --color-teal-500: #14bfa8;
+  --color-teal-600: #0e9f8c;
+  --color-teal-700: #0b7f71;
+  --color-teal-50: #ebfbf8;
+
+  --color-canvas: #f4f6fa;
+  --color-surface: #ffffff;
+  --color-line: #e3e8ef;
+  --color-line-strong: #cfd7e3;
+  --color-ink: #0b1628;
+  --color-ink-2: #3b4a60;
+  --color-muted: #66758b;
+
+  --color-positive: #0e9f6e;
+  --color-positive-50: #e8f7f1;
+  --color-negative: #d64545;
+  --color-negative-50: #fdeeee;
+  --color-warning: #b87503;
+  --color-warning-50: #fdf4e3;
+
+  /* Series de gráficos (validadas para daltonismo, por paleta) */
+  --color-series-in: #0e9f8c;
+  --color-series-out: #e0694a;
+  --color-out-ink: #b4482c;
+  --color-event: #8b5cf6;
+
+  --radius-card: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(11 22 40 / 0.04), 0 8px 24px -12px rgb(11 22 40 / 0.12);
+  --shadow-pop: 0 20px 50px -20px rgb(5 18 38 / 0.45);
+
+  --animate-fade-up: fade-up 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+
+/* ================================================================
+   Paletas de color (el usuario elige en Configuración)
+   ================================================================ */
+[data-theme="oceano"] {
+  --color-navy-950: #07142e;
+  --color-navy-900: #0c1f45;
+  --color-navy-800: #12295a;
+  --color-navy-700: #1b3a78;
+  --color-navy-600: #264b94;
+  --color-navy-500: #3b63b3;
+  --color-teal-50: #eaf6fd;
+  --color-teal-200: #b3e2f8;
+  --color-teal-300: #7dccf2;
+  --color-teal-400: #38b0e8;
+  --color-teal-500: #0e98d8;
+  --color-teal-600: #0a7cb5;
+  --color-teal-700: #086492;
+  --color-series-in: #0a7cb5;
+  --color-series-out: #e0694a;
+  --color-out-ink: #b4482c;
+  --color-event: #8b5cf6;
+}
+[data-theme="esmeralda"] {
+  --color-navy-950: #06180f;
+  --color-navy-900: #0b2a1c;
+  --color-navy-800: #0f3826;
+  --color-navy-700: #164b33;
+  --color-navy-600: #1e5e41;
+  --color-navy-500: #2f7a57;
+  --color-teal-50: #e9faf2;
+  --color-teal-200: #b0ecd0;
+  --color-teal-300: #74dcad;
+  --color-teal-400: #34c98a;
+  --color-teal-500: #12b373;
+  --color-teal-600: #0c935d;
+  --color-teal-700: #09754b;
+  --color-series-in: #0c935d;
+  --color-series-out: #8b5cf6;
+  --color-out-ink: #6d3fd6;
+  --color-event: #db2777;
+}
+[data-theme="violeta"] {
+  --color-navy-950: #120d2b;
+  --color-navy-900: #1d1545;
+  --color-navy-800: #271d5c;
+  --color-navy-700: #342877;
+  --color-navy-600: #433494;
+  --color-navy-500: #5a4bb3;
+  --color-teal-50: #f3effe;
+  --color-teal-200: #d9ccfb;
+  --color-teal-300: #bda7f7;
+  --color-teal-400: #9f7ff1;
+  --color-teal-500: #8661e8;
+  --color-teal-600: #6d45d0;
+  --color-teal-700: #5835ab;
+  --color-series-in: #6d45d0;
+  --color-series-out: #e0694a;
+  --color-out-ink: #b4482c;
+  --color-event: #0e98d8;
+}
+[data-theme="grafito"] {
+  --color-navy-950: #111317;
+  --color-navy-900: #1a1d23;
+  --color-navy-800: #23272f;
+  --color-navy-700: #2f343e;
+  --color-navy-600: #3e4450;
+  --color-navy-500: #555c6b;
+  --color-teal-50: #fff7e6;
+  --color-teal-200: #fde2a8;
+  --color-teal-300: #fbcd6b;
+  --color-teal-400: #f7b733;
+  --color-teal-500: #eea10f;
+  --color-teal-600: #c7830a;
+  --color-teal-700: #9d6608;
+  --color-series-in: #c7830a;
+  --color-series-out: #4f7cc9;
+  --color-out-ink: #3a5fa8;
+  --color-event: #8b5cf6;
+}
+[data-theme="vino"] {
+  --color-navy-950: #1f0b13;
+  --color-navy-900: #33111f;
+  --color-navy-800: #45172a;
+  --color-navy-700: #5c1f38;
+  --color-navy-600: #742848;
+  --color-navy-500: #93375c;
+  --color-teal-50: #fdf6e9;
+  --color-teal-200: #f5dfb0;
+  --color-teal-300: #ecc777;
+  --color-teal-400: #e2ae46;
+  --color-teal-500: #d4962a;
+  --color-teal-600: #b07a1f;
+  --color-teal-700: #8a5f18;
+  --color-series-in: #b07a1f;
+  --color-series-out: #4f7cc9;
+  --color-out-ink: #3a5fa8;
+  --color-event: #8b5cf6;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-teal-500);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-teal-200);
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
+
+@utility card {
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+@utility skeleton {
+  background: linear-gradient(90deg, #eef1f6 0%, #f7f9fc 50%, #eef1f6 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite linear;
+  border-radius: 0.5rem;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

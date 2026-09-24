@@ -1,0 +1,270 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarClock, CalendarPlus, ExternalLink, LayoutDashboard, Lock,
+  LogOut, Menu, Plus, Settings, Waves, CalendarDays, X,
+} from "lucide-react";
+import { signOut } from "@/app/actions/auth";
+import { Logo } from "@/components/brand/logo";
+import { cn } from "@/components/ui/cn";
+import { useAppData } from "./app-data";
+import { MAIN_NAV, UPCOMING_NAV, type NavItem } from "./nav";
+
+const isActive = (path: string, href: string) => path === href || path.startsWith(href + "/");
+
+function NavLink({ item, path, locked, onNavigate }: { item: NavItem; path: string; locked?: boolean; onNavigate?: () => void }) {
+  const active = isActive(path, item.href);
+  const I = item.icon;
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "group flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] font-semibold transition-colors",
+        active ? "bg-white/10 text-white" : locked ? "text-white/40 hover:text-white/70" : "text-white/70 hover:bg-white/5 hover:text-white",
+      )}
+    >
+      <I className={cn("size-[18px] shrink-0", active && "text-teal-300")} strokeWidth={2.1} />
+      <span className="flex-1 truncate">{item.label}</span>
+      {locked && <Lock className="size-3.5 opacity-60" aria-label="Próximamente" />}
+    </Link>
+  );
+}
+
+function SidebarContent({ path, name, onNavigate }: { path: string; name: string; onNavigate?: () => void }) {
+  const dataEdgeUrl = process.env.NEXT_PUBLIC_DATA_EDGE_URL ?? "https://dataedgeconsulting.com";
+  return (
+    <div className="flex h-full flex-col">
+      <div className="px-5 pt-6 pb-5">
+        <Link href="/inicio" onClick={onNavigate}>
+          <Logo tone="light" />
+        </Link>
+      </div>
+      <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4" aria-label="Principal">
+        <div className="space-y-0.5">
+          {MAIN_NAV.map((i) => (
+            <NavLink key={i.href} item={i} path={path} onNavigate={onNavigate} />
+          ))}
+        </div>
+        <div>
+          <p className="px-3 pb-2 text-[10px] font-bold tracking-[0.18em] text-white/35 uppercase">Próximos bloques</p>
+          <div className="space-y-0.5">
+            {UPCOMING_NAV.map((i) => (
+              <NavLink key={i.href} item={i} path={path} locked onNavigate={onNavigate} />
+            ))}
+          </div>
+        </div>
+      </nav>
+      <div className="space-y-0.5 border-t border-white/10 px-3 py-3">
+        <a
+          href={dataEdgeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-semibold text-teal-300 hover:bg-white/5"
+        >
+          <ExternalLink className="size-4" /> Más herramientas de Data Edge
+        </a>
+        <NavLink item={{ href: "/configuracion", label: "Configuración", icon: Settings }} path={path} onNavigate={onNavigate} />
+        <form action={signOut}>
+          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-[14px] font-semibold text-white/60 hover:bg-white/5 hover:text-white">
+            <LogOut className="size-[18px]" /> Cerrar sesión
+          </button>
+        </form>
+        <p className="truncate px-3 pt-2 text-xs text-white/35">{name}</p>
+      </div>
+    </div>
+  );
+}
+
+function QuickActions({ className, compact }: { className?: string; compact?: boolean }) {
+  const { openTransaction, openPlanned, openEvent } = useAppData();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const actions = [
+    { label: "Registrar gasto", icon: ArrowUpRight, tone: "text-out-ink bg-series-out/10", run: () => openTransaction({ kind: "expense" }) },
+    { label: "Registrar ingreso", icon: ArrowDownLeft, tone: "text-teal-700 bg-teal-50", run: () => openTransaction({ kind: "income" }) },
+    { label: "Transferencia", icon: ArrowLeftRight, tone: "text-navy-700 bg-navy-900/5", run: () => openTransaction({ kind: "transfer" }) },
+    { label: "Programar ingreso", icon: CalendarClock, tone: "text-teal-700 bg-teal-50", run: () => openPlanned({ kind: "income" }) },
+    { label: "Programar gasto o pago", icon: CalendarClock, tone: "text-out-ink bg-series-out/10", run: () => openPlanned({ kind: "expense" }) },
+    { label: "Nuevo evento", icon: CalendarPlus, tone: "text-navy-700 bg-navy-900/5", run: () => openEvent({}) },
+  ];
+
+  return (
+    <div ref={ref} className={cn("relative", className)}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Acción rápida"
+        className={cn(
+          "grid place-items-center rounded-2xl bg-teal-500 text-navy-950 shadow-[0_10px_30px_-8px_rgb(20_191_168/0.8)] transition-transform hover:bg-teal-400 active:scale-95",
+          compact ? "size-14" : "h-11 grid-flow-col gap-2 px-4 text-sm font-bold",
+        )}
+      >
+        <Plus className={cn("transition-transform duration-200", open && "rotate-45", compact ? "size-6" : "size-5")} strokeWidth={2.6} />
+        {!compact && "Registrar"}
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className={cn(
+            "absolute z-40 w-64 overflow-hidden rounded-2xl border border-line bg-surface p-1.5 shadow-pop animate-scale-in",
+            compact ? "bottom-[calc(100%+12px)] left-1/2 -translate-x-1/2 origin-bottom" : "top-[calc(100%+8px)] right-0 origin-top-right",
+          )}
+        >
+          {actions.map((a) => (
+            <button
+              key={a.label}
+              role="menuitem"
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                a.run();
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-sm font-semibold text-ink hover:bg-canvas"
+            >
+              <span className={cn("grid size-8 place-items-center rounded-lg", a.tone)}>
+                <a.icon className="size-4" />
+              </span>
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function AppShell({
+  name,
+  todayLabel,
+  theme,
+  children,
+}: {
+  name: string;
+  todayLabel: string;
+  theme: string;
+  children: React.ReactNode;
+}) {
+  const path = usePathname();
+  const [drawer, setDrawer] = useState(false);
+
+  // La paleta también debe aplicar a modales y avisos (se renderizan fuera de este contenedor)
+  useEffect(() => {
+    const html = document.documentElement;
+    if (theme && theme !== "data-edge") html.dataset.theme = theme;
+    else delete html.dataset.theme;
+    return () => {
+      delete html.dataset.theme;
+    };
+  }, [theme]);
+
+  useEffect(() => setDrawer(false), [path]);
+
+  const bottom = [
+    { href: "/inicio", label: "Inicio", icon: LayoutDashboard },
+    { href: "/movimientos", label: "Movimientos", icon: ArrowLeftRight },
+    null,
+    { href: "/flujo-de-caja", label: "Flujo", icon: Waves },
+    { href: "/calendario", label: "Calendario", icon: CalendarDays },
+  ];
+
+  return (
+    <div className="min-h-dvh lg:pl-[264px]" data-theme={theme !== "data-edge" ? theme : undefined}>
+      {/* Sidebar escritorio */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] bg-navy-950 lg:block">
+        <SidebarContent path={path} name={name} />
+      </aside>
+
+      {/* Barra superior móvil */}
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-canvas/85 px-4 py-3 backdrop-blur lg:hidden">
+        <Link href="/inicio">
+          <Logo />
+        </Link>
+        <button
+          type="button"
+          onClick={() => setDrawer(true)}
+          className="grid size-10 place-items-center rounded-xl text-ink hover:bg-surface"
+          aria-label="Abrir menú"
+        >
+          <Menu className="size-5" />
+        </button>
+      </header>
+
+      {/* Menú lateral móvil */}
+      {drawer && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-navy-950/50" onClick={() => setDrawer(false)} />
+          <div className="absolute inset-y-0 right-0 w-[290px] bg-navy-950 shadow-pop animate-[fade-up_0.2s_both]">
+            <button
+              type="button"
+              onClick={() => setDrawer(false)}
+              className="absolute top-5 right-4 grid size-9 place-items-center rounded-full text-white/70 hover:bg-white/10"
+              aria-label="Cerrar menú"
+            >
+              <X className="size-5" />
+            </button>
+            <SidebarContent path={path} name={name} onNavigate={() => setDrawer(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Barra superior escritorio */}
+      <header className="sticky top-0 z-20 hidden h-16 items-center justify-between border-b border-line bg-canvas/85 px-10 backdrop-blur lg:flex">
+        <p className="text-sm font-semibold text-muted first-letter:uppercase">{todayLabel}</p>
+        <QuickActions />
+      </header>
+
+      <main className="mx-auto w-full max-w-[1200px] px-4 pt-6 pb-32 sm:px-6 lg:px-10 lg:pt-8 lg:pb-16">{children}</main>
+
+      {/* Navegación inferior móvil */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        aria-label="Navegación rápida"
+      >
+        <div className="mx-auto grid max-w-md grid-cols-5 items-end px-2">
+          {bottom.map((b) =>
+            b === null ? (
+              <div key="fab" className="flex justify-center">
+                <QuickActions compact className="-translate-y-4" />
+              </div>
+            ) : (
+              <Link
+                key={b.href}
+                href={b.href}
+                aria-current={isActive(path, b.href) ? "page" : undefined}
+                className={cn(
+                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold",
+                  isActive(path, b.href) ? "text-teal-700" : "text-muted",
+                )}
+              >
+                <b.icon className="size-5" strokeWidth={2.1} />
+                {b.label}
+              </Link>
+            ),
+          )}
+        </div>
+      </nav>
+    </div>
+  );
+}
