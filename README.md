@@ -65,6 +65,7 @@ Regenerar tipos: `npx supabase gen types typescript --project-id dxeuucxauivmbcu
 - **Saldo real disponible** = saldo inicial de cada cuenta de banco, efectivo y billetera + movimientos **confirmados con fecha hasta hoy**. Lo programado nunca suma hasta que se confirme ("¿Se recibió? Sí / Otro valor / No").
 - Un movimiento nuevo con fecha futura se guarda como **programado** (no como real). La migración `20260925100000` convierte los que ya existían.
 - Cada cuenta muestra "¿De dónde sale este saldo?": saldo inicial + ingresos − gastos ± transferencias.
+- **Préstamos**: prestar es una transferencia de tu cuenta a una cuenta "Préstamo que hice" (por cobrar); un abono es la transferencia de vuelta. No cuentan como gasto ni ingreso. Lo mismo al revés para "Préstamo que recibí". Los intereses sí van como ingreso o gasto.
 - **Flujo real** (pestaña Real) reconstruye el saldo día a día solo con lo confirmado. **Flujo proyectado** (pestaña Proyectado) parte del real y suma lo programado pendiente.
 - **Por recibir / Por pagar** = lo programado pendiente hasta la fecha elegida (incluye vencidos de los últimos 45 días y pagos de tarjeta estimados).
 - **Saldo proyectado** = Disponible + Por recibir − Por pagar.
