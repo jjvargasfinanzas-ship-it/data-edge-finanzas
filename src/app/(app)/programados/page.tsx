@@ -20,14 +20,14 @@ const TABS = {
 export default async function ProgramadosPage({ searchParams }: { searchParams: Promise<{ tipo?: string }> }) {
   const sp = await searchParams;
   const tab = (sp.tipo === "gastos" ? "gastos" : "ingresos") as keyof typeof TABS;
-  const [{ today, currency }, planned, accounts, categories, rates] = await Promise.all([
-    getContext(),
+  const { today, currency } = await getContext();
+  const [planned, accounts, categories, rates, plan] = await Promise.all([
     getPlanned(),
     getAccounts(),
     getCategories(),
     getRates(),
+    getPeriodPlan(startOfMonth(today), endOfMonth(today)),
   ]);
-  const plan = await getPeriodPlan(startOfMonth(today), endOfMonth(today));
   const acc = new Map(accounts.map((a) => [a.id, a]));
   const cat = new Map(categories.map((c) => [c.id, c]));
 
@@ -74,7 +74,7 @@ export default async function ProgramadosPage({ searchParams }: { searchParams: 
     <>
       <PageHeader
         title="Programación"
-        subtitle="Ingresos y gastos que se repiten. Se generan solos en tu flujo y calendario; no cambian tu saldo hasta que los marques como recibidos o pagados."
+        subtitle="Lo que esperas recibir o pagar. Es una proyección: no cambia tu saldo hasta que lo confirmes. Toca uno para editarlo o eliminarlo."
         actions={
           <>
             <NewPlannedButton variant="secondary" initial={{ kind: "expense" }}>
@@ -85,20 +85,19 @@ export default async function ProgramadosPage({ searchParams }: { searchParams: 
         }
       />
 
-      <div className="mb-6 grid grid-cols-3 gap-3">
-        <Card className="p-4 sm:p-5">
-          <p className="text-xs font-semibold text-muted sm:text-[13px]">Ingresos fijos / mes</p>
-          <Money value={fixedIn} currency={currency} className="mt-1 block text-lg font-bold text-positive sm:text-2xl" />
-        </Card>
-        <Card className="p-4 sm:p-5">
-          <p className="text-xs font-semibold text-muted sm:text-[13px]">Gastos fijos / mes</p>
-          <Money value={fixedOut} currency={currency} className="mt-1 block text-lg font-bold sm:text-2xl" />
-        </Card>
-        <Card className="p-4 sm:p-5">
-          <p className="text-xs font-semibold text-muted sm:text-[13px]">Margen mensual</p>
-          <Money value={fixedIn - fixedOut} currency={currency} colored className="mt-1 block text-lg font-bold sm:text-2xl" />
-        </Card>
-      </div>
+      <Card className="mb-4 grid grid-cols-3 divide-x divide-line">
+        {[
+          { l: "Ingresos fijos/mes", v: fixedIn, c: "text-positive" },
+          { l: "Gastos fijos/mes", v: fixedOut, c: "text-ink" },
+          { l: "Margen", v: fixedIn - fixedOut, c: fixedIn - fixedOut < 0 ? "text-negative" : "text-ink" },
+        ].map((k) => (
+          <div key={k.l} className="min-w-0 px-3 py-2.5 sm:px-5 sm:py-3">
+            <p className="truncate text-[11px] font-semibold text-muted sm:text-xs">{k.l}</p>
+            <Money value={k.v} currency={currency} compact className={`text-[15px] font-bold sm:hidden ${k.c}`} />
+            <Money value={k.v} currency={currency} className={`hidden text-lg font-bold sm:inline ${k.c}`} />
+          </div>
+        ))}
+      </Card>
 
       <nav className="mb-4 flex w-fit rounded-xl bg-surface p-1 ring-1 ring-line" aria-label="Tipo">
         {(Object.keys(TABS) as (keyof typeof TABS)[]).map((k) => {

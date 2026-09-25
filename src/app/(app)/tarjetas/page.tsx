@@ -48,7 +48,7 @@ export default async function TarjetasPage() {
           />
         </Card>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {cards.map((c) => {
             const used = Math.max(0, -c.balance);
             const limit = c.credit_limit ?? 0;

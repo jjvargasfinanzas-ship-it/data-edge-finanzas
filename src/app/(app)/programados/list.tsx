@@ -94,7 +94,7 @@ function MonthStatus({ r, monthLabel }: { r: PlannedRow; monthLabel: string }) {
 export function PlannedList({ rows, currency, monthLabel }: { rows: PlannedRow[]; currency: Currency; monthLabel: string }) {
   const { openPlanned } = useAppData();
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {GROUPS.map((g) => {
         const items = rows.filter((r) => r.kind === g.kind);
         if (!items.length) return null;
@@ -104,7 +104,7 @@ export function PlannedList({ rows, currency, monthLabel }: { rows: PlannedRow[]
             <Card>
               <ul className="divide-y divide-line">
                 {items.map((r) => (
-                  <li key={r.id} className={cn("flex items-center gap-3 px-5 py-3.5", !r.is_active && "opacity-55")}>
+                  <li key={r.id} className={cn("flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5", !r.is_active && "opacity-55")}>
                     {r.kind === "transfer" ? (
                       <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-navy-900/5 text-navy-700">
                         <ArrowLeftRight className="size-[18px]" />
@@ -125,7 +125,7 @@ export function PlannedList({ rows, currency, monthLabel }: { rows: PlannedRow[]
                       </p>
                       <MonthStatus r={r} monthLabel={monthLabel} />
                     </button>
-                    <div className="text-right">
+                    <div className="shrink-0 text-right">
                       <Money value={r.amount} currency={r.currency} className={cn("text-sm font-bold", r.kind === "income" ? "text-positive" : "text-ink")} />
                       {r.frequency !== "monthly" && r.monthly > 0 && (
                         <p className="num text-[11px] text-muted">
@@ -137,7 +137,7 @@ export function PlannedList({ rows, currency, monthLabel }: { rows: PlannedRow[]
                       <button
                         type="button"
                         onClick={() => openPlanned({ ...r })}
-                        className="grid size-8 place-items-center rounded-lg text-muted hover:bg-canvas hover:text-ink"
+                        className="hidden size-8 place-items-center rounded-lg text-muted hover:bg-canvas hover:text-ink sm:grid"
                         aria-label="Editar"
                       >
                         <Pencil className="size-4" />
@@ -146,7 +146,7 @@ export function PlannedList({ rows, currency, monthLabel }: { rows: PlannedRow[]
                       <ConfirmButton
                         action={() => deletePlanned(r.id)}
                         confirmLabel="¿Eliminar?"
-                        className="grid size-8 place-items-center rounded-lg text-muted hover:bg-negative-50 hover:text-negative"
+                        className="hidden size-8 place-items-center rounded-lg text-muted hover:bg-negative-50 hover:text-negative sm:grid"
                       >
                         <Trash2 className="size-4" aria-label="Eliminar" />
                       </ConfirmButton>

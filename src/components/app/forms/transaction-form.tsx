@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { saveTransaction } from "@/app/actions/finance";
+import { deleteTransaction, saveTransaction } from "@/app/actions/finance";
+import { ConfirmButton } from "@/components/ui/confirm-button";
 import { initialState } from "@/app/actions/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -51,6 +52,8 @@ export function TransactionForm({ initial, onDone }: { initial: TxInitial; onDon
   const plannedPending = isPlanned ? Math.max(0, (initial.planned_amount ?? 0) - (initial.planned_received ?? 0)) : 0;
   const typed = amountRaw ? parseAmountInput(amountRaw) : (initial.amount ?? 0);
   const isShort = isPlanned && typed > 0 && typed < plannedPending - 0.005;
+  const isFuture = date > today;
+  const willSchedule = isFuture && !initial.id && !initial.planned_item_id;
   const fe = state.fieldErrors ?? {};
 
   useEffect(() => {
@@ -180,7 +183,16 @@ export function TransactionForm({ initial, onDone }: { initial: TxInitial; onDon
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Fecha" htmlFor="date" error={fe.date}>
           <div className="flex gap-2">
-            <Input id="date" name="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required className="flex-1" />
+            <Input
+              id="date"
+              name="date"
+              type="date"
+              value={date}
+              max={initial.id || initial.planned_item_id ? today : undefined}
+              onChange={(e) => setDate(e.target.value)}
+              required
+              className="flex-1"
+            />
           </div>
           <div className="flex gap-1.5">
             {[
@@ -217,11 +229,29 @@ export function TransactionForm({ initial, onDone }: { initial: TxInitial; onDon
         {more && <Textarea name="notes" className="mt-2" maxLength={500} defaultValue={initial.notes ?? ""} />}
       </div>
 
+      {willSchedule && (
+        <p className="rounded-xl bg-warning-50 px-4 py-3 text-sm text-warning">
+          <strong>La fecha es futura.</strong> Como aún no ha ocurrido, se guardará como <strong>programado</strong> y no cambiará tu saldo real hasta que lo confirmes.
+        </p>
+      )}
+
       {state.error && state.fieldErrors && <p className="text-sm font-medium text-negative">{state.error}</p>}
 
       <Button type="submit" size="lg" className="w-full" loading={pending}>
-        {initial.id ? "Guardar cambios" : "Registrar"}
+        {initial.id ? "Guardar cambios" : willSchedule ? "Programar" : "Registrar"}
       </Button>
+      {initial.id && (
+        <div className="flex justify-center">
+          <ConfirmButton
+            action={() => deleteTransaction(initial.id!)}
+            confirmLabel="¿Eliminar este movimiento?"
+            onDone={onDone}
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-negative hover:bg-negative-50"
+          >
+            Eliminar movimiento
+          </ConfirmButton>
+        </div>
+      )}
     </form>
   );
 }

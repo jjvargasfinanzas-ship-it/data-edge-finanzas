@@ -128,3 +128,14 @@ export function nextOccurrence(item: Recurring, from: ISODate): ISODate | null {
   const horizon = addMonthsClamped(from, 13);
   return occurrencesBetween(item, from, horizon)[0] ?? null;
 }
+
+/**
+ * Ocurrencias anteriores a la creación del programado: solo la más reciente
+ * cuenta (para que el usuario confirme si ya ocurrió); las demás se ignoran.
+ * Devuelve la fecha de esa ocurrencia o null.
+ */
+export function lastOccurrenceBefore(item: Recurring, before: ISODate, lookFrom: ISODate): ISODate | null {
+  if (before <= lookFrom) return null;
+  const list = occurrencesBetween(item, lookFrom, addDays(before, -1));
+  return list.length ? list[list.length - 1] : null;
+}

@@ -51,7 +51,7 @@ export function TransactionList({ rows, page, pages, count }: { rows: TxRow[]; p
     <div>
       {[...groups.entries()].map(([date, items]) => (
         <section key={date}>
-          <h3 className="sticky top-[57px] z-10 border-b border-line bg-canvas/90 px-5 py-2 text-xs font-bold tracking-wide text-muted uppercase backdrop-blur lg:top-16">
+          <h3 className="sticky top-[57px] z-10 border-b border-line bg-canvas/90 px-4 py-1.5 sm:px-5 sm:py-2 text-xs font-bold tracking-wide text-muted uppercase backdrop-blur lg:top-16">
             {formatLong(date)}
           </h3>
           <ul className="divide-y divide-line">
@@ -59,7 +59,7 @@ export function TransactionList({ rows, page, pages, count }: { rows: TxRow[]; p
               const isIn = t.kind === "income";
               const isTr = t.kind === "transfer";
               return (
-                <li key={t.id} className="group flex items-center gap-3 px-5 py-3 hover:bg-canvas/60">
+                <li key={t.id} className="group relative flex items-center gap-3 px-4 py-2.5 hover:bg-canvas/60 sm:px-5 sm:py-3">
                   {isTr ? (
                     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-navy-900/5 text-navy-700">
                       <ArrowLeftRight className="size-[18px]" />
@@ -70,7 +70,7 @@ export function TransactionList({ rows, page, pages, count }: { rows: TxRow[]; p
                   <button
                     type="button"
                     onClick={() => openTransaction({ ...t })}
-                    className="min-w-0 flex-1 text-left"
+                    className="min-w-0 flex-1 text-left after:absolute after:inset-0 sm:after:hidden"
                     aria-label={`Editar ${t.description ?? t.categoryName ?? "movimiento"}`}
                   >
                     <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-ink">
@@ -85,7 +85,7 @@ export function TransactionList({ rows, page, pages, count }: { rows: TxRow[]; p
                     {isIn ? "+" : isTr ? "" : "−"}
                     {formatMoney(t.amount, t.currency)}
                   </span>
-                  <div className="flex shrink-0 items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+                  <div className="hidden shrink-0 items-center gap-0.5 sm:flex sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
                     <button
                       type="button"
                       onClick={() => openTransaction({ ...t })}

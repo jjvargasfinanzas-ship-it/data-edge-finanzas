@@ -70,14 +70,15 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
     <>
       <PageHeader
         title="Movimientos"
-        subtitle="Todo lo que entra, sale y se mueve entre tus cuentas."
+        subtitle="Lo que realmente entró, salió o se movió. Toca uno para corregirlo."
         actions={
           <>
             <a
               href={`/api/export/movimientos?mes=${month}`}
+              aria-label="Descargar CSV"
               className="inline-flex h-11 items-center gap-2 rounded-xl border border-line-strong bg-surface px-4 text-sm font-semibold text-ink hover:bg-canvas"
             >
-              <Download className="size-4" /> CSV
+              <Download className="size-4" /> <span className="hidden sm:inline">CSV</span>
             </a>
             <NewTransactionButton>Nuevo movimiento</NewTransactionButton>
           </>
@@ -91,18 +92,19 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
         values={{ tipo: sp.tipo ?? "", cuenta: sp.cuenta ?? "", categoria: sp.categoria ?? "", q: sp.q ?? "" }}
       />
 
-      <div className="mb-6 grid grid-cols-3 gap-3">
+      <Card className="mb-4 grid grid-cols-3 divide-x divide-line">
         {[
           { l: "Ingresos", v: totals.income, c: "text-positive" },
           { l: "Gastos", v: totals.expense, c: "text-ink" },
           { l: "Neto", v: totals.savings, c: totals.savings < 0 ? "text-negative" : "text-ink" },
         ].map((k) => (
-          <Card key={k.l} className="px-4 py-3">
-            <p className="text-xs font-semibold text-muted">{k.l} del mes</p>
-            <Money value={k.v} currency={currency} className={`text-lg font-bold ${k.c}`} />
-          </Card>
+          <div key={k.l} className="min-w-0 px-3 py-2.5 sm:px-5 sm:py-3">
+            <p className="text-[11px] font-semibold text-muted sm:text-xs">{k.l}</p>
+            <Money value={k.v} currency={currency} compact className={`text-[15px] font-bold sm:hidden ${k.c}`} />
+            <Money value={k.v} currency={currency} className={`hidden text-lg font-bold sm:inline ${k.c}`} />
+          </div>
         ))}
-      </div>
+      </Card>
 
       <Card>
         {rows.length ? (

@@ -1,208 +1,260 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronDown, TriangleAlert } from "lucide-react";
-import { BalanceChart } from "@/components/charts/balance-chart";
-import { FlowBars } from "@/components/charts/flow-bars";
-import { CashPosition } from "@/components/app/cash-position";
-import { NewPlannedButton } from "@/components/app/open-buttons";
+import { ChevronLeft, ChevronRight, TriangleAlert } from "lucide-react";
+import { BalanceChartLazy } from "@/components/charts/lazy";
+import { NewPlannedButton, NewTransactionButton } from "@/components/app/open-buttons";
 import { PendingList } from "@/components/app/pending-list";
 import { Badge, Card, CardHeader, EmptyState, PageHeader } from "@/components/ui/misc";
+import { StatRows } from "@/components/ui/stat-rows";
 import { cn } from "@/components/ui/cn";
-import { getAccounts, getCashflow, getContext, getRates } from "@/lib/data";
-import { addDays, endOfMonth, formatLong, formatMonth, formatShort } from "@/lib/dates";
-import { bucketize, isLiquid } from "@/lib/cashflow";
+import { getAccounts, getCashflow, getCategories, getContext, getRates, toAccountLite } from "@/lib/data";
+import { addDays, addMonthsClamped, endOfMonth, formatLong, formatMonth, formatShort, isValidMonth } from "@/lib/dates";
+import { isLiquid } from "@/lib/cashflow";
+import { buildRealFlow } from "@/lib/real-flow";
 import { convert, formatMoney } from "@/lib/money";
+import { RealDays, type RealDayRow } from "./real-days";
 
 export const metadata: Metadata = { title: "Flujo de caja" };
 
-const HORIZONS = { mes: "Este mes", "30": "30 días", "60": "60 días", "90": "90 días" } as const;
-type Horizon = keyof typeof HORIZONS;
+const HORIZONS = [
+  { k: "mes", label: "Este mes" },
+  { k: "30", label: "30 días" },
+  { k: "60", label: "60 días" },
+  { k: "90", label: "90 días" },
+] as const;
 
-export default async function FlujoPage({ searchParams }: { searchParams: Promise<{ h?: string }> }) {
+export default async function FlujoPage({ searchParams }: { searchParams: Promise<{ v?: string; h?: string; mes?: string }> }) {
   const sp = await searchParams;
-  const h: Horizon = sp.h && sp.h in HORIZONS ? (sp.h as Horizon) : "mes";
+  const view = sp.v === "proyectado" ? "proyectado" : "real";
   const { today, currency } = await getContext();
-  const end = h === "mes" ? endOfMonth(today) : addDays(today, Number(h));
-  const [flow, accounts, rates] = await Promise.all([getCashflow(end), getAccounts(), getRates()]);
+
+  return (
+    <>
+      <PageHeader title="Flujo de caja" subtitle="El real muestra lo que ya pasó. El proyectado, lo que podría pasar con lo programado." />
+      <nav className="mb-4 grid w-full max-w-md grid-cols-2 rounded-xl bg-surface p-1 ring-1 ring-line" aria-label="Tipo de flujo">
+        {[
+          { k: "real", label: "Real", hint: "Confirmado" },
+          { k: "proyectado", label: "Proyectado", hint: "Estimado" },
+        ].map((t) => (
+          <Link
+            key={t.k}
+            href={`/flujo-de-caja?v=${t.k}`}
+            aria-current={view === t.k ? "page" : undefined}
+            className={cn("rounded-lg px-3 py-2 text-center text-sm font-bold", view === t.k ? "bg-navy-900 text-white" : "text-muted hover:text-ink")}
+          >
+            {t.label}
+            <span className={cn("block text-[11px] font-semibold", view === t.k ? "text-white/60" : "text-muted/80")}>{t.hint}</span>
+          </Link>
+        ))}
+      </nav>
+      {view === "real" ? (
+        <RealView month={isValidMonth(sp.mes) ? sp.mes! : today.slice(0, 7)} today={today} currency={currency} />
+      ) : (
+        <ProjectedView h={sp.h ?? "mes"} today={today} currency={currency} />
+      )}
+    </>
+  );
+}
+
+async function RealView({ month, today, currency }: { month: string; today: string; currency: import("@/lib/money").Currency }) {
+  const { supabase } = await getContext();
+  const from = `${month}-01`;
+  const to = endOfMonth(from) < today ? endOfMonth(from) : today;
+  const [accounts, rates, categories, { data: txs }] = await Promise.all([
+    getAccounts(),
+    getRates(),
+    getCategories(),
+    supabase
+      .from("transactions")
+      .select("id, date, kind, amount, to_amount, account_id, to_account_id, category_id, description, notes")
+      .gte("date", from)
+      .lte("date", today)
+      .order("date")
+      .limit(5000),
+  ]);
+  const lites = accounts.map(toAccountLite);
+  const current = accounts
+    .filter((a) => !a.is_archived && isLiquid(a.type))
+    .reduce((s, a) => s + convert(a.balance, a.currency, currency, rates), 0);
+  const rows = (txs ?? []).map((t) => ({ ...t, amount: Number(t.amount), to_amount: t.to_amount === null ? null : Number(t.to_amount) }));
+  const flow = buildRealFlow({ accounts: lites, txs: rows, currentBalance: current, from, to, today, baseCurrency: currency, rates });
+  const acc = new Map(accounts.map((a) => [a.id, a]));
+  const cat = new Map(categories.map((c) => [c.id, c]));
+  const isCurrent = month === today.slice(0, 7);
+  const prev = addMonthsClamped(from, -1).slice(0, 7);
+  const next = addMonthsClamped(from, 1).slice(0, 7);
+
+  const dayRows: RealDayRow[] = flow.days
+    .filter((d) => d.moves.length)
+    .reverse()
+    .map((d) => ({
+      date: d.date,
+      closing: d.closing,
+      moves: d.moves.map((m) => {
+        const t = m.tx as (typeof rows)[number];
+        const c = t.category_id ? cat.get(t.category_id) : undefined;
+        const a = acc.get(t.account_id);
+        const toA = t.to_account_id ? acc.get(t.to_account_id) : undefined;
+        return {
+          id: t.id,
+          title: t.description || c?.name || (t.kind === "transfer" ? "Transferencia" : t.kind === "income" ? "Ingreso" : "Gasto"),
+          subtitle: t.kind === "transfer" ? `${a?.name ?? ""} → ${toA?.name ?? ""}` : [c && t.description ? c.name : null, a?.name].filter(Boolean).join(" · "),
+          effect: m.effect,
+          icon: c?.icon ?? null,
+          color: c?.color ?? null,
+          isTransfer: t.kind === "transfer",
+          tx: t,
+        };
+      }),
+    }));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex w-fit items-center rounded-xl border border-line-strong bg-surface">
+        <Link href={`/flujo-de-caja?v=real&mes=${prev}`} className="grid size-10 place-items-center text-muted hover:text-ink" aria-label="Mes anterior">
+          <ChevronLeft className="size-4" />
+        </Link>
+        <span className="min-w-36 text-center text-sm font-bold text-ink">{formatMonth(month)}</span>
+        {isCurrent ? (
+          <span className="size-10" />
+        ) : (
+          <Link href={`/flujo-de-caja?v=real&mes=${next}`} className="grid size-10 place-items-center text-muted hover:text-ink" aria-label="Mes siguiente">
+            <ChevronRight className="size-4" />
+          </Link>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <Card>
+          <CardHeader title="Resumen real" subtitle="Solo movimientos confirmados en bancos, efectivo y billeteras" />
+          <div className="px-4 pb-2 sm:px-5">
+            <StatRows
+              rows={[
+                { label: `Saldo al ${formatShort(from)}`, value: formatMoney(flow.opening, currency) },
+                { op: "+", label: "Entradas", value: formatMoney(flow.inflow, currency), tone: "in" },
+                { op: "−", label: "Salidas", value: formatMoney(flow.outflow, currency), tone: "out" },
+                {
+                  op: "=",
+                  label: isCurrent ? "Saldo real hoy" : `Saldo al ${formatShort(to)}`,
+                  value: formatMoney(flow.closing, currency),
+                  tone: flow.closing < 0 ? "negative" : "total",
+                },
+              ]}
+            />
+          </div>
+          <div className="px-2 pb-3 sm:px-4">
+            <BalanceChartLazy data={flow.days.map((d) => ({ date: d.date, closing: d.closing, inflow: d.inflow, outflow: d.outflow }))} currency={currency} height={180} />
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader
+            title="Movimientos del mes"
+            subtitle="Toca uno para corregirlo o eliminarlo"
+            action={<NewTransactionButton size="sm" variant="secondary">Registrar</NewTransactionButton>}
+          />
+          {dayRows.length ? (
+            <RealDays days={dayRows} currency={currency} today={today} />
+          ) : (
+            <EmptyState title="No hay movimientos confirmados en este mes." action={<NewTransactionButton initial={{ kind: "expense" }}>Registrar movimiento</NewTransactionButton>} />
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+async function ProjectedView({ h, today, currency }: { h: string; today: string; currency: import("@/lib/money").Currency }) {
+  const horizon = HORIZONS.find((x) => x.k === h)?.k ?? "mes";
+  const end = horizon === "mes" ? endOfMonth(today) : addDays(today, Number(horizon));
+  const flow = await getCashflow(end);
 
   const occ = flow.occurrences.filter((o) => !(o.flow === "transfer" && o.cashEffect === 0));
   const incomes = occ.filter((o) => o.cashEffect > 0 || (o.kind === "income" && o.cashEffect === 0));
   const outgoings = occ.filter((o) => !incomes.includes(o));
   const toReceive = incomes.reduce((s, o) => s + Math.max(0, o.cashEffect), 0);
   const toPay = outgoings.reduce((s, o) => s + Math.max(0, -o.cashEffect), 0);
-  const low = flow.days.reduce((m, d) => (d.closing < m.closing ? d : m), flow.days[0]);
   const activeDays = flow.days.filter((d) => d.items.some((o) => o.cashEffect !== 0));
-  const buckets = bucketize(flow.days, h === "mes" || h === "30" ? "week" : "month", (d) =>
-    h === "mes" || h === "30" ? `Sem. ${formatShort(d)}` : formatMonth(d),
-  );
 
   return (
-    <>
-      <PageHeader
-        title="Flujo de caja"
-        subtitle="Cuánto tienes, cuánto esperas recibir, cuánto tienes comprometido y cómo quedará tu saldo."
-        actions={<NewPlannedButton variant="secondary">Programar</NewPlannedButton>}
-      />
-
-      <nav className="mb-5 flex w-fit rounded-xl bg-surface p-1 ring-1 ring-line" aria-label="Periodo">
-        {(["mes", "30", "60", "90"] as Horizon[]).map((k) => (
+    <div className="space-y-4">
+      <nav className="flex w-fit rounded-xl bg-surface p-1 ring-1 ring-line" aria-label="Periodo">
+        {HORIZONS.map(({ k, label }) => (
           <Link
             key={k}
-            href={`/flujo-de-caja?h=${k}`}
-            aria-current={k === h ? "true" : undefined}
-            className={cn("rounded-lg px-3 py-1.5 text-sm font-semibold", k === h ? "bg-navy-900 text-white" : "text-muted hover:text-ink")}
+            href={`/flujo-de-caja?v=proyectado&h=${k}`}
+            aria-current={k === horizon ? "true" : undefined}
+            className={cn("rounded-lg px-3 py-1.5 text-sm font-semibold", k === horizon ? "bg-navy-900 text-white" : "text-muted hover:text-ink")}
           >
-            {HORIZONS[k]}
+            {label}
           </Link>
         ))}
       </nav>
 
-      <div className="space-y-6">
-        <CashPosition
-          currency={currency}
-          available={flow.startBalance}
-          toReceive={toReceive}
-          toPay={toPay}
-          projected={flow.endBalance}
-          projectedLabel={`Al ${formatShort(end)}, si todo lo programado ocurre`}
-          receiveCount={incomes.length}
-          payCount={outgoings.length}
-        includesCards={outgoings.some((o) => o.flow === "card_estimate" || o.flow === "payment")}
-          overdueCount={outgoings.filter((o) => o.overdue).length}
-          lowPoint={low ? { value: low.closing, label: formatShort(low.date) } : null}
-          accounts={accounts
-            .filter((a) => !a.is_archived && isLiquid(a.type))
-            .map((a) => ({ id: a.id, name: a.name, type: a.type, currency: a.currency, balance: a.balance, baseBalance: convert(a.balance, a.currency, currency, rates) }))}
-        />
-
-        {flow.firstNegativeDate && (
-          <div className="flex items-start gap-3 rounded-2xl border border-negative/20 bg-negative-50 px-5 py-4 text-sm text-negative">
-            <TriangleAlert className="mt-0.5 size-5 shrink-0" />
-            <p>
-              <strong>Tu saldo disponible pasaría a negativo el {formatLong(flow.firstNegativeDate)}.</strong> El punto más bajo sería{" "}
-              <strong className="num">{formatMoney(flow.minBalance, currency)}</strong> el {formatShort(flow.minDate)}.
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <Card>
+          <CardHeader title="Proyección" subtitle="Parte de tu saldo real de hoy y suma o resta lo programado pendiente" action={<Badge>Estimado</Badge>} />
+          <div className="px-4 pb-2 sm:px-5">
+            <StatRows
+              rows={[
+                { label: "Saldo real hoy", value: formatMoney(flow.startBalance, currency) },
+                { op: "+", label: "Por recibir", hint: `${incomes.length} ingreso${incomes.length === 1 ? "" : "s"}`, value: formatMoney(toReceive, currency), tone: "in" },
+                { op: "−", label: "Por pagar", hint: `${outgoings.length} pago${outgoings.length === 1 ? "" : "s"}`, value: formatMoney(toPay, currency), tone: "out" },
+                { op: "=", label: `Saldo estimado al ${formatShort(end)}`, value: formatMoney(flow.endBalance, currency), tone: flow.endBalance < 0 ? "negative" : "total" },
+              ]}
+            />
+          </div>
+          {flow.firstNegativeDate && (
+            <p className="flex items-start gap-2 border-t border-line bg-negative-50 px-4 py-2.5 text-xs font-semibold text-negative sm:px-5">
+              <TriangleAlert className="size-4 shrink-0" />
+              El {formatLong(flow.firstNegativeDate)} tu saldo pasaría a negativo. Punto más bajo: {formatMoney(flow.minBalance, currency)} el {formatShort(flow.minDate)}.
             </p>
-          </div>
-        )}
-
-        <Card>
-          <CardHeader title="Cómo se mueve tu saldo" subtitle="Hoy es tu saldo real. Los días siguientes suman y restan lo pendiente. Pasa el cursor sobre la línea." />
-          <div className="px-3 pt-4 pb-4 sm:px-5">
-            <BalanceChart data={flow.days.map((d) => ({ date: d.date, closing: d.closing, inflow: d.inflow, outflow: d.outflow }))} currency={currency} height={260} />
-          </div>
-        </Card>
-
-        <div className="grid items-start gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader title="Ingresos pendientes" subtitle={`${formatMoney(toReceive, currency)} por recibir`} />
-            <div className="px-5 pb-3">
-              <PendingList
-                items={incomes}
-                baseCurrency={currency}
-                group="date"
-                empty={<EmptyState title="No hay ingresos pendientes en este periodo" action={<NewPlannedButton initial={{ kind: "income" }}>Programar ingreso</NewPlannedButton>} className="py-8" />}
-              />
-            </div>
-          </Card>
-          <Card>
-            <CardHeader title="Gastos y pagos pendientes" subtitle={`${formatMoney(toPay, currency)} comprometido`} />
-            <div className="px-5 pb-3">
-              <PendingList
-                items={outgoings}
-                baseCurrency={currency}
-                group="date"
-                empty={<EmptyState title="No hay pagos pendientes en este periodo" action={<NewPlannedButton initial={{ kind: "expense" }}>Programar gasto</NewPlannedButton>} className="py-8" />}
-              />
-            </div>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader title="Día a día" subtitle="Fechas con movimientos y el saldo con que cerraría cada día" />
-          {activeDays.length ? (
-            <ol className="mt-3 divide-y divide-line">
-              {activeDays.map((d) => {
-                const ins = d.items.filter((o) => o.cashEffect > 0);
-                const outs = d.items.filter((o) => o.cashEffect < 0);
-                return (
-                  <li key={d.date} className="grid gap-2 px-5 py-3 sm:grid-cols-[180px_1fr_150px] sm:items-start">
-                    <p className="text-sm font-bold text-ink first-letter:uppercase">
-                      {d.date === today ? "Hoy" : formatLong(d.date)}
-                    </p>
-                    <ul className="space-y-1 text-sm">
-                      {[...ins, ...outs].map((o) => (
-                        <li key={o.key} className="flex justify-between gap-3">
-                          <span className="flex min-w-0 flex-1 items-center gap-1.5 text-ink-2">
-                            <span className={cn("size-1.5 shrink-0 rounded-full", o.cashEffect > 0 ? "bg-series-in" : "bg-series-out")} />
-                            <span className="truncate">{o.name}</span>
-                            {o.state === "partial" ? (
-                              <Badge tone="warning" className="shrink-0 max-sm:hidden">Parcial</Badge>
-                            ) : o.overdue ? (
-                              <Badge tone="warning" className="shrink-0 max-sm:hidden">Vencido</Badge>
-                            ) : null}
-                          </span>
-                          <span className={cn("num shrink-0 font-semibold", o.cashEffect > 0 ? "text-positive" : "text-ink")}>
-                            {formatMoney(o.cashEffect, currency, { signed: true })}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    <p className={cn("num text-sm font-bold sm:text-right", d.closing < 0 ? "text-negative" : "text-ink")}>
-                      <span className="mr-1 text-xs font-semibold text-muted">Saldo</span>
-                      {formatMoney(d.closing, currency)}
-                    </p>
-                  </li>
-                );
-              })}
-            </ol>
-          ) : (
-            <EmptyState title="No hay movimientos proyectados" description="Programa tus ingresos y gastos para ver tu flujo día a día." action={<NewPlannedButton>Programar</NewPlannedButton>} />
           )}
+          <div className="px-2 pt-2 pb-3 sm:px-4">
+            <BalanceChartLazy data={flow.days.map((d) => ({ date: d.date, closing: d.closing, inflow: d.inflow, outflow: d.outflow }))} currency={currency} height={200} />
+          </div>
         </Card>
 
-        <details className="card group">
-          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4">
-            <span>
-              <span className="block text-[15px] font-bold text-ink">Resumen por {h === "mes" || h === "30" ? "semana" : "mes"}</span>
-              <span className="block text-[13px] text-muted">Entradas, salidas y saldo por periodo</span>
-            </span>
-            <ChevronDown className="size-5 text-muted transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="px-3 sm:px-5">
-            <FlowBars data={buckets.map((b) => ({ label: b.label, inflow: b.inflow, outflow: b.outflow }))} currency={currency} />
+        <Card>
+          <CardHeader title="Lo programado, por fecha" subtitle="Confírmalo cuando ocurra, edítalo o elimínalo" action={<NewPlannedButton size="sm" variant="secondary">Programar</NewPlannedButton>} />
+          <div className="px-4 pb-2 sm:px-5">
+            <PendingList
+              items={occ}
+              baseCurrency={currency}
+              group="date"
+              empty={<EmptyState title="No hay nada programado en este periodo" action={<NewPlannedButton initial={{ kind: "income" }}>Programar ingreso</NewPlannedButton>} className="py-8" />}
+            />
           </div>
-          <div className="overflow-x-auto">
-            <table className="mt-4 w-full min-w-[560px] text-sm">
-              <caption className="sr-only">Flujo de caja por periodo</caption>
-              <thead>
-                <tr className="border-y border-line text-left text-xs font-bold tracking-wide text-muted uppercase">
-                  <th className="px-5 py-3">Periodo</th>
-                  <th className="px-3 py-3 text-right">Saldo inicial</th>
-                  <th className="px-3 py-3 text-right">Entradas</th>
-                  <th className="px-3 py-3 text-right">Salidas</th>
-                  <th className="px-5 py-3 text-right">Saldo final</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {buckets.map((b) => (
-                  <tr key={b.key}>
-                    <td className="px-5 py-3 font-semibold text-ink">
-                      {b.label}
-                      <span className="block text-xs font-normal text-muted">
-                        {formatShort(b.from)} – {formatShort(b.to)}
-                      </span>
-                    </td>
-                    <td className="num px-3 py-3 text-right text-ink-2">{formatMoney(b.opening, currency)}</td>
-                    <td className="num px-3 py-3 text-right text-positive">{b.inflow ? formatMoney(b.inflow, currency, { signed: true }) : "—"}</td>
-                    <td className="num px-3 py-3 text-right text-ink">{b.outflow ? formatMoney(-b.outflow, currency) : "—"}</td>
-                    <td className={cn("num px-5 py-3 text-right font-bold", b.closing < 0 ? "text-negative" : "text-ink")}>{formatMoney(b.closing, currency)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </details>
+        </Card>
       </div>
-    </>
+
+      {activeDays.length > 0 && (
+        <Card>
+          <CardHeader title="Saldo estimado por día" subtitle="Cómo quedaría tu saldo al cierre de cada fecha con movimientos" />
+          <ol className="mt-2 divide-y divide-line">
+            {activeDays.map((d) => (
+              <li key={d.date} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm sm:px-5">
+                <span className="min-w-0">
+                  <span className="block font-semibold text-ink first-letter:uppercase">{d.date === today ? "Hoy" : formatLong(d.date)}</span>
+                  <span className="block truncate text-xs text-muted">
+                    {d.items
+                      .filter((o) => o.cashEffect !== 0)
+                      .map((o) => o.name)
+                      .join(" · ")}
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="num block text-xs text-muted">
+                    {d.inflow > 0 && <span className="text-positive">+{formatMoney(d.inflow, currency)} </span>}
+                    {d.outflow > 0 && <span>−{formatMoney(d.outflow, currency)}</span>}
+                  </span>
+                  <span className={cn("num block font-bold", d.closing < 0 ? "text-negative" : "text-ink")}>{formatMoney(d.closing, currency)}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </Card>
+      )}
+    </div>
   );
 }

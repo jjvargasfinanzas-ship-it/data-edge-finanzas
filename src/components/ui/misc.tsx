@@ -42,10 +42,10 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4 animate-fade-up">
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-3 animate-fade-up sm:mb-6">
       <div className="min-w-0">
-        <h1 className="font-display text-[28px] leading-tight font-semibold text-ink sm:text-[32px]">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+        <h1 className="font-display text-2xl leading-tight font-semibold text-ink sm:text-[32px]">{title}</h1>
+        {subtitle && <p className="mt-0.5 text-[13px] text-muted sm:mt-1 sm:text-sm">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>

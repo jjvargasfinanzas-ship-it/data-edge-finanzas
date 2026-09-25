@@ -17,7 +17,7 @@
  */
 import { addDays, monthKey, startOfWeek, type ISODate } from "./dates";
 import { convert, type Currency, type RateTable } from "./money";
-import { nextDayOfMonth, occurrencesBetween, type Frequency } from "./recurrence";
+import { lastOccurrenceBefore, nextDayOfMonth, occurrencesBetween, type Frequency } from "./recurrence";
 import type { Enums } from "./supabase/database.types";
 
 export type AccountType = Enums<"account_type">;
@@ -148,8 +148,9 @@ export function expandPlanned(p: Params): Occurrence[] {
     const to = item.to_account_id ? accounts.get(item.to_account_id) : undefined;
 
     const createdOn = item.created_at?.slice(0, 10);
+    const keepBefore = createdOn ? lastOccurrenceBefore(item, createdOn, from) : null;
     for (const d of occurrencesBetween(item, from, p.horizonEnd)) {
-      if (createdOn && d < createdOn && d < p.today) continue;
+      if (createdOn && d < createdOn && d < p.today && d !== keepBefore) continue;
       const st = settled.get(`${item.id}|${d}`);
       if (st?.status) continue; // cerrada u omitida
       const received = st?.received ?? 0;

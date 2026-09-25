@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { savePlanned } from "@/app/actions/finance";
+import { deletePlanned, savePlanned } from "@/app/actions/finance";
+import { ConfirmButton } from "@/components/ui/confirm-button";
 import { initialState } from "@/app/actions/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -152,6 +153,21 @@ export function PlannedForm({ initial, onDone }: { initial: PlannedInitial; onDo
       <Button type="submit" size="lg" className="w-full" loading={pending}>
         {initial.id ? "Guardar cambios" : kind === "income" ? "Programar ingreso" : "Programar"}
       </Button>
+      {initial.id && (
+        <div className="flex justify-center">
+          <ConfirmButton
+            action={() => deletePlanned(initial.id!)}
+            confirmLabel={frequency === "once" ? "¿Eliminar esta programación?" : "¿Eliminar todas sus fechas futuras?"}
+            onDone={onDone}
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-negative hover:bg-negative-50"
+          >
+            Eliminar programación
+          </ConfirmButton>
+        </div>
+      )}
+      {initial.id && (
+        <p className="text-center text-xs text-muted">Los movimientos que ya confirmaste se conservan.</p>
+      )}
     </form>
   );
 }

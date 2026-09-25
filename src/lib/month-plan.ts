@@ -12,7 +12,7 @@
  */
 import type { ISODate } from "./dates";
 import type { Settlement } from "./cashflow";
-import { occurrencesBetween, type Frequency } from "./recurrence";
+import { lastOccurrenceBefore, occurrencesBetween, type Frequency } from "./recurrence";
 
 export type OccStatus = "done" | "closed" | "partial" | "overdue" | "today" | "upcoming" | "skipped";
 
@@ -72,10 +72,11 @@ export function buildPlanRows(p: {
   for (const item of p.planned) {
     if (!item.is_active) continue;
     const createdOn = item.created_at?.slice(0, 10);
+    const keepBefore = createdOn ? lastOccurrenceBefore(item, createdOn, p.from) : null;
     for (const d of occurrencesBetween(item, p.from, p.to)) {
       const st = settled.get(`${item.id}|${d}`);
-      // Fechas anteriores a la creación del programado no cuentan, salvo que se hayan registrado
-      if (createdOn && d < createdOn && d < p.today && !st) continue;
+      // Antes de la creación solo cuenta la ocurrencia más reciente (o lo ya registrado)
+      if (createdOn && d < createdOn && d < p.today && !st && d !== keepBefore) continue;
       const received = st?.received ?? 0;
       let status: OccStatus;
       if (st?.status === "skipped") status = "skipped";

@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { getContext } from "@/lib/data";
-import { isValidISODate } from "@/lib/dates";
+import { formatMedium, isValidISODate } from "@/lib/dates";
 import { parseAmountInput } from "@/lib/money";
 import { dbError, done, fail, optStr, str, zodFail } from "./helpers";
 import type { ActionState } from "./types";
@@ -61,9 +61,33 @@ export async function saveTransaction(_: ActionState, fd: FormData): Promise<Act
   });
   if (!parsed.success) return zodFail(parsed.error);
 
-  const { supabase } = await getContext();
+  const { supabase, today } = await getContext();
   const id = optStr(fd, "id");
   const row = parsed.data;
+
+  // Algo con fecha futura aún no ha ocurrido: no puede afectar el saldo real.
+  if (row.date > today) {
+    if (id || row.planned_item_id) {
+      return fail("La fecha no puede ser futura: un movimiento real ya ocurrió.", {
+        date: "Usa hoy o una fecha pasada. Para algo futuro, prográmalo.",
+      });
+    }
+    const label = row.description || (row.kind === "income" ? "Ingreso" : row.kind === "expense" ? "Gasto" : "Transferencia");
+    const { error: pe } = await supabase.from("planned_items").insert({
+      kind: row.kind,
+      name: label.slice(0, 80),
+      amount: row.amount,
+      account_id: row.account_id,
+      to_account_id: row.to_account_id,
+      category_id: row.category_id,
+      frequency: "once",
+      start_date: row.date,
+      notes: row.notes,
+    });
+    if (pe) return dbError(pe);
+    return done(`Como la fecha es futura, quedó programado para el ${formatMedium(row.date)}. Confírmalo cuando ocurra.`);
+  }
+
   const { error } = id
     ? await supabase.from("transactions").update(row).eq("id", id)
     : await supabase.from("transactions").insert(row);
@@ -81,6 +105,36 @@ export async function saveTransaction(_: ActionState, fd: FormData): Promise<Act
   }
   const label = row.kind === "income" ? "Ingreso" : row.kind === "expense" ? "Gasto" : "Transferencia";
   return done(id ? `${label} actualizado` : `${label} registrado`);
+}
+
+/**
+ * Confirma que una ocurrencia programada sí ocurrió, por el valor pendiente.
+ * Crea el movimiento real con la fecha programada (o hoy si aún no llega).
+ */
+export async function confirmOccurrence(plannedItemId: string, plannedDate: string): Promise<ActionState> {
+  if (!uuid.safeParse(plannedItemId).success || !isValidISODate(plannedDate)) return fail("Programado no válido");
+  const { supabase, today } = await getContext();
+  const [{ data: item }, { data: prev }] = await Promise.all([
+    supabase.from("planned_items").select("*").eq("id", plannedItemId).single(),
+    supabase.from("transactions").select("amount").eq("planned_item_id", plannedItemId).eq("planned_date", plannedDate),
+  ]);
+  if (!item) return fail("No encontramos ese programado.");
+  const received = (prev ?? []).reduce((s, t) => s + Number(t.amount), 0);
+  const pending = Math.round((Number(item.amount) - received) * 100) / 100;
+  if (pending <= 0) return fail("Ya estaba confirmado completo.");
+  const { error } = await supabase.from("transactions").insert({
+    kind: item.kind,
+    amount: pending,
+    account_id: item.account_id,
+    to_account_id: item.to_account_id,
+    category_id: item.category_id,
+    description: item.name,
+    date: plannedDate <= today ? plannedDate : today,
+    planned_item_id: item.id,
+    planned_date: plannedDate,
+  });
+  if (error) return dbError(error);
+  return done(item.kind === "income" ? `${item.name}: ingreso confirmado` : `${item.name}: pago confirmado`);
 }
 
 /**

@@ -14,6 +14,10 @@ export type AccountOption = Pick<
   "id" | "name" | "type" | "currency" | "is_archived" | "credit_limit" | "statement_day" | "due_day" | "institution" | "opening_balance" | "opening_date" | "include_in_net_worth"
 > & { balance: number };
 export type CategoryOption = Pick<Tables<"categories">, "id" | "name" | "kind" | "parent_id" | "icon" | "color" | "is_archived">;
+export type PlannedOption = Pick<
+  Tables<"planned_items">,
+  "id" | "kind" | "name" | "amount" | "account_id" | "to_account_id" | "category_id" | "frequency" | "start_date" | "end_date" | "notes" | "is_active"
+>;
 
 type Sheet =
   | { type: "tx"; initial: TxInitial }
@@ -24,6 +28,7 @@ type Sheet =
 
 interface Ctx {
   accounts: AccountOption[];
+  planned: PlannedOption[];
   categories: CategoryOption[];
   today: string;
   currency: Currency;
@@ -47,12 +52,14 @@ const TITLES = {
 
 export function AppDataProvider({
   accounts,
+  planned,
   categories,
   today,
   currency,
   children,
 }: {
   accounts: AccountOption[];
+  planned: PlannedOption[];
   categories: CategoryOption[];
   today: string;
   currency: Currency;
@@ -64,6 +71,7 @@ export function AppDataProvider({
   const value = useMemo<Ctx>(
     () => ({
       accounts,
+      planned,
       categories,
       today,
       currency,
@@ -72,7 +80,7 @@ export function AppDataProvider({
       openEvent: (initial = {}) => setSheet({ type: "event", initial }),
       openAccount: (initial = {}) => setSheet({ type: "account", initial }),
     }),
-    [accounts, categories, today, currency],
+    [accounts, planned, categories, today, currency],
   );
 
   let title = "";
