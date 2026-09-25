@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { NewTransactionButton } from "@/components/app/open-buttons";
+import { LoanPaymentButton, NewTransactionButton } from "@/components/app/open-buttons";
 import { PendingList } from "@/components/app/pending-list";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/misc";
 import { AccountIcon } from "@/components/ui/icons";
@@ -94,6 +94,20 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
   });
 
   const money = (v: number) => formatMoney(v, acc.currency);
+  const receivable = acc.type === "loan_receivable";
+  const payable = acc.type === "loan_payable";
+  const loan = receivable || payable;
+  const loanPending = receivable ? acc.balance : -acc.balance;
+  // Préstamo: capital prestado − abonos = pendiente
+  const lentTotal = Math.abs(acc.opening_balance) + (receivable ? trIn : trOut);
+  const repaid = receivable ? trOut : trIn;
+  const loanRows: StatRow[] = [
+    { label: receivable ? "Le presté" : "Me prestaron", value: money(lentTotal) },
+    { op: "−", label: receivable ? "Abonos que me hizo" : "Abonos que he hecho", value: money(repaid), tone: "in" },
+    { op: "=", label: receivable ? "Me debe hoy" : "Debo hoy", value: money(loanPending), tone: "total" },
+  ];
+  if (income || expense)
+    loanRows.push({ label: "Intereses u otros registrados aquí", hint: "Mejor regístralos como ingreso o gasto en tu cuenta", value: money(income - expense) });
   const composition: StatRow[] = [
     {
       label: "Saldo inicial",
@@ -118,8 +132,8 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <Link href="/cuentas" className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-ink">
-        <ArrowLeft className="size-4" /> Cuentas
+      <Link href={loan ? "/prestamos" : "/cuentas"} className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-ink">
+        <ArrowLeft className="size-4" /> {loan ? "Préstamos" : "Cuentas"}
       </Link>
       <PageHeader
         title={
@@ -136,12 +150,20 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
         <div className="space-y-4">
           <Card className="p-4 sm:p-5">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[13px] font-semibold text-muted">{isCard ? "Deuda actual" : "Saldo real hoy"}</p>
+              <p className="text-[13px] font-semibold text-muted">{receivable ? "Me debe" : payable ? "Debo" : isCard ? "Deuda actual" : "Saldo real hoy"}</p>
               <Badge tone="positive">Real</Badge>
             </div>
-            <p className={cn("num mt-1 text-3xl font-bold whitespace-nowrap", !isCard && acc.balance < 0 && "text-negative")}>
-              {money(isCard ? Math.max(0, -acc.balance) : acc.balance)}
+            <p className={cn("num mt-1 text-3xl font-bold whitespace-nowrap", !isCard && !loan && acc.balance < 0 && "text-negative")}>
+              {money(loan ? loanPending : isCard ? Math.max(0, -acc.balance) : acc.balance)}
             </p>
+            {loan ? (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <LoanPaymentButton loan={acc} size="sm">
+                  {receivable ? "Me abonaron" : "Abonar"}
+                </LoanPaymentButton>
+                <span className="text-xs text-muted">No cuenta como ingreso ni gasto.</span>
+              </div>
+            ) : (
             <div className="mt-3 flex flex-wrap gap-2">
               <NewTransactionButton initial={{ kind: "expense", account_id: acc.id }} variant="secondary" size="sm">
                 Gasto
@@ -150,11 +172,12 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
                 Ingreso
               </NewTransactionButton>
             </div>
+            )}
           </Card>
 
           <Card className="p-4 sm:p-5">
             <h2 className="font-bold text-ink">¿De dónde sale este saldo?</h2>
-            <StatRows rows={composition} className="mt-1" />
+            <StatRows rows={loan ? loanRows : composition} className="mt-1" />
             <p className="mt-2 text-xs text-muted">
               Solo cuenta movimientos con fecha hasta hoy. Si el saldo inicial no es correcto, corrígelo con <strong>Editar</strong> arriba.
             </p>

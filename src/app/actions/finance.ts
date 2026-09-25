@@ -178,7 +178,7 @@ export async function deleteTransaction(id: string): Promise<ActionState> {
 const accountSchema = z
   .object({
     name: z.string().min(1, "Escribe un nombre").max(80),
-    type: z.enum(["bank_savings", "bank_checking", "cash", "digital_wallet", "investment", "credit_card", "other"]),
+    type: z.enum(["bank_savings", "bank_checking", "cash", "digital_wallet", "investment", "credit_card", "other", "loan_receivable", "loan_payable"]),
     institution: z.string().max(80).nullable(),
     currency,
     opening_balance: z.number().finite("Saldo no válido"),
@@ -206,8 +206,9 @@ export async function saveAccount(_: ActionState, fd: FormData): Promise<ActionS
   const isCard = type === "credit_card";
   const balanceRaw = amountOf(fd, "opening_balance") ?? 0;
   const negative = str(fd, "balance_sign") === "negative";
-  // Tarjeta: el usuario escribe la deuda en positivo; se guarda negativa
-  const opening_balance = isCard ? -Math.abs(balanceRaw) : negative ? -Math.abs(balanceRaw) : balanceRaw;
+  // Tarjeta y préstamo recibido: el usuario escribe la deuda en positivo; se guarda negativa
+  const isDebt = isCard || type === "loan_payable";
+  const opening_balance = isDebt ? -Math.abs(balanceRaw) : negative ? -Math.abs(balanceRaw) : balanceRaw;
 
   const parsed = accountSchema.safeParse({
     name: str(fd, "name"),
@@ -230,6 +231,105 @@ export async function saveAccount(_: ActionState, fd: FormData): Promise<ActionS
     : await supabase.from("accounts").insert(parsed.data);
   if (error) return dbError(error);
   return done(id ? "Cuenta actualizada" : isCard ? "Tarjeta creada" : "Cuenta creada");
+}
+
+// ------------------------------------------------------------------
+// Préstamos (cuentas por cobrar / por pagar)
+// ------------------------------------------------------------------
+const loanSchema = z.object({
+  direction: z.enum(["lent", "borrowed"]),
+  person: z.string().min(1, "Escribe a quién le prestaste").max(60),
+  amount,
+  currency,
+  account_id: optUuid,
+  date: isoDate,
+  due_date: isoDate.nullable(),
+  notes: z.string().max(500).nullable(),
+});
+
+/**
+ * Registra un préstamo como una cuenta por cobrar (lent) o por pagar (borrowed).
+ * Si el dinero salió/entró de una de mis cuentas, se registra como transferencia
+ * (no es gasto ni ingreso). Si no, el préstamo nace con saldo inicial.
+ * Con fecha acordada de pago, se programa el cobro/pago en el flujo proyectado.
+ */
+export async function createLoan(_: ActionState, fd: FormData): Promise<ActionState> {
+  const direction = str(fd, "direction");
+  const parsed = loanSchema.safeParse({
+    direction,
+    person: str(fd, "person"),
+    amount: amountOf(fd, "amount"),
+    currency: str(fd, "currency") || "COP",
+    account_id: optStr(fd, "account_id"),
+    date: str(fd, "date"),
+    due_date: optStr(fd, "due_date"),
+    notes: optStr(fd, "notes"),
+  });
+  if (!parsed.success) {
+    const r = zodFail(parsed.error);
+    if (direction === "borrowed" && r.fieldErrors?.person) r.fieldErrors.person = "Escribe quién te prestó";
+    return r;
+  }
+  const v = parsed.data;
+  const { supabase, today } = await getContext();
+  const lent = v.direction === "lent";
+  if (v.date > today) return fail("La fecha no puede ser futura.", { date: "Usa hoy o una fecha pasada." });
+  if (v.due_date && v.due_date < v.date) return fail("Revisa la fecha de pago.", { due_date: "Debe ser posterior al préstamo." });
+
+  let fromAcc: { id: string; currency: string } | null = null;
+  if (v.account_id) {
+    const { data } = await supabase.from("accounts").select("id, currency").eq("id", v.account_id).maybeSingle();
+    if (!data) return fail("Elige una cuenta válida.", { account_id: "Cuenta no válida" });
+    fromAcc = data;
+  }
+  const loanCurrency = fromAcc?.currency ?? v.currency;
+
+  const { data: loan, error: le } = await supabase
+    .from("accounts")
+    .insert({
+      name: (lent ? `Préstamo a ${v.person}` : `Préstamo de ${v.person}`).slice(0, 80),
+      type: lent ? "loan_receivable" : "loan_payable",
+      institution: v.person,
+      currency: loanCurrency as "COP",
+      // Sin cuenta de origen: el préstamo nace con su saldo (por cobrar + / por pagar −)
+      opening_balance: fromAcc ? 0 : lent ? v.amount : -v.amount,
+      opening_date: v.date,
+      include_in_net_worth: true,
+    })
+    .select("id")
+    .single();
+  if (le || !loan) return dbError(le);
+
+  if (fromAcc) {
+    const { error: te } = await supabase.from("transactions").insert({
+      kind: "transfer",
+      amount: v.amount,
+      // Presté: sale de mi cuenta hacia el préstamo. Me prestaron: sale del préstamo hacia mi cuenta.
+      account_id: lent ? fromAcc.id : loan.id,
+      to_account_id: lent ? loan.id : fromAcc.id,
+      date: v.date,
+      description: lent ? `Préstamo a ${v.person}` : `Préstamo de ${v.person}`,
+      notes: v.notes,
+    });
+    if (te) {
+      await supabase.from("accounts").delete().eq("id", loan.id);
+      return dbError(te);
+    }
+  }
+
+  if (v.due_date && fromAcc) {
+    await supabase.from("planned_items").insert({
+      kind: "transfer",
+      name: (lent ? `Cobro préstamo ${v.person}` : `Pago préstamo ${v.person}`).slice(0, 80),
+      amount: v.amount,
+      account_id: lent ? loan.id : fromAcc.id,
+      to_account_id: lent ? fromAcc.id : loan.id,
+      frequency: "once",
+      start_date: v.due_date,
+      notes: "Fecha acordada de pago del préstamo.",
+    });
+  }
+  return done(lent ? `Préstamo a ${v.person} registrado. No cuenta como gasto.` : `Préstamo de ${v.person} registrado. No cuenta como ingreso.`);
 }
 
 export async function setAccountArchived(id: string, archived: boolean): Promise<ActionState> {

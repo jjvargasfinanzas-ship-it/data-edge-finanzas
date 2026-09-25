@@ -32,20 +32,20 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
         actions={<NewAccountButton>Nueva cuenta</NewAccountButton>}
       />
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        <Card className="p-5">
-          <p className="text-[13px] font-semibold text-muted">Disponible (bancos, efectivo y billeteras)</p>
-          <Money value={liquid} currency={currency} className="mt-1 block text-2xl font-bold" />
-        </Card>
-        <Card className="p-5">
-          <p className="text-[13px] font-semibold text-muted">Activos</p>
-          <Money value={assets} currency={currency} className="mt-1 block text-2xl font-bold" />
-        </Card>
-        <Card className="p-5">
-          <p className="text-[13px] font-semibold text-muted">Deudas en cuentas y tarjetas</p>
-          <Money value={liabilities} currency={currency} className="mt-1 block text-2xl font-bold" />
-        </Card>
-      </div>
+      <Card className="mb-4 grid grid-cols-3 divide-x divide-line">
+        {[
+          { l: "Disponible", v: liquid, h: "Bancos, efectivo, billeteras" },
+          { l: "Activos", v: assets, h: "Incluye inversiones y lo que me deben" },
+          { l: "Deudas", v: liabilities, h: "Tarjetas y préstamos" },
+        ].map((k) => (
+          <div key={k.l} className="min-w-0 px-3 py-2.5 sm:px-5 sm:py-3">
+            <p className="truncate text-[11px] font-semibold text-muted sm:text-xs">{k.l}</p>
+            <Money value={k.v} currency={currency} compact className="text-[15px] font-bold sm:hidden" />
+            <Money value={k.v} currency={currency} className="hidden text-lg font-bold sm:inline" />
+            <p className="hidden truncate text-[11px] text-muted sm:block">{k.h}</p>
+          </div>
+        ))}
+      </Card>
 
       {visible.length === 0 ? (
         <Card>

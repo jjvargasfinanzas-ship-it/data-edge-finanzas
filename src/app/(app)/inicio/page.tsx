@@ -52,6 +52,8 @@ export default async function InicioPage() {
   const liquid = active.filter((a) => isLiquid(a.type));
   const cards = active.filter((a) => a.type === "credit_card");
   const cardDebt = cards.reduce((s, a) => s + toBase(Math.max(0, -a.balance), a.currency), 0);
+  const owedToMe = active.filter((a) => a.type === "loan_receivable").reduce((s, a) => s + toBase(Math.max(0, a.balance), a.currency), 0);
+  const iOwe = active.filter((a) => a.type === "loan_payable").reduce((s, a) => s + toBase(Math.max(0, -a.balance), a.currency), 0);
 
   // Por confirmar: lo programado cuya fecha ya llegó
   const visible = flow.occurrences.filter((o) => !(o.flow === "transfer" && o.cashEffect === 0));
@@ -141,6 +143,21 @@ export default async function InicioPage() {
                   <Link href="/tarjetas" className="flex items-center gap-3 px-4 py-2.5 text-muted hover:bg-canvas/60 sm:px-5">
                     <span className="min-w-0 flex-1 truncate text-xs font-semibold">Deuda en tarjetas (no se resta del disponible)</span>
                     <span className="num shrink-0 text-xs font-bold">{formatMoney(cardDebt, currency)}</span>
+                    <ChevronRight className="size-4 shrink-0" />
+                  </Link>
+                </li>
+              )}
+              {(owedToMe > 0 || iOwe > 0) && (
+                <li>
+                  <Link href="/prestamos" className="flex items-center gap-3 px-4 py-2.5 text-muted hover:bg-canvas/60 sm:px-5">
+                    <span className="min-w-0 flex-1 truncate text-xs font-semibold">
+                      {owedToMe > 0 && iOwe > 0 ? "Préstamos: me deben / debo" : owedToMe > 0 ? "Préstamos que me deben (no suman al disponible)" : "Préstamos que debo (no se restan del disponible)"}
+                    </span>
+                    <span className="num shrink-0 text-xs font-bold">
+                      {owedToMe > 0 && <span className="text-positive">{formatMoney(owedToMe, currency)}</span>}
+                      {owedToMe > 0 && iOwe > 0 && " / "}
+                      {iOwe > 0 && formatMoney(iOwe, currency)}
+                    </span>
                     <ChevronRight className="size-4 shrink-0" />
                   </Link>
                 </li>

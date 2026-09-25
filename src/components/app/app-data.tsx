@@ -8,6 +8,7 @@ import { TransactionForm, type TxInitial } from "./forms/transaction-form";
 import { PlannedForm, type PlannedInitial } from "./forms/planned-form";
 import { EventForm, type EventInitial } from "./forms/event-form";
 import { AccountForm, type AccountInitial } from "./forms/account-form";
+import { LoanForm, type LoanInitial } from "./forms/loan-form";
 
 export type AccountOption = Pick<
   Tables<"accounts">,
@@ -24,6 +25,7 @@ type Sheet =
   | { type: "planned"; initial: PlannedInitial }
   | { type: "event"; initial: EventInitial }
   | { type: "account"; initial: AccountInitial }
+  | { type: "loan"; initial: LoanInitial }
   | null;
 
 interface Ctx {
@@ -36,6 +38,7 @@ interface Ctx {
   openPlanned: (initial?: PlannedInitial) => void;
   openEvent: (initial?: EventInitial) => void;
   openAccount: (initial?: AccountInitial) => void;
+  openLoan: (initial?: LoanInitial) => void;
 }
 
 const AppDataContext = createContext<Ctx | null>(null);
@@ -79,6 +82,7 @@ export function AppDataProvider({
       openPlanned: (initial = {}) => setSheet({ type: "planned", initial }),
       openEvent: (initial = {}) => setSheet({ type: "event", initial }),
       openAccount: (initial = {}) => setSheet({ type: "account", initial }),
+      openLoan: (initial = {}) => setSheet({ type: "loan", initial }),
     }),
     [accounts, planned, categories, today, currency],
   );
@@ -97,7 +101,14 @@ export function AppDataProvider({
     title = sheet.initial.kind === "income" ? "Registrar ingreso recibido" : sheet.initial.kind === "expense" ? "Registrar pago" : "Registrar transferencia";
   if (sheet?.type === "event") title = sheet.initial.id ? "Editar evento" : "Nuevo evento";
   if (sheet?.type === "account")
-    title = sheet.initial.id ? "Editar cuenta" : sheet.initial.type === "credit_card" ? "Nueva tarjeta" : "Nueva cuenta";
+    title = sheet.initial.id
+      ? sheet.initial.type === "loan_receivable" || sheet.initial.type === "loan_payable"
+        ? "Editar préstamo"
+        : "Editar cuenta"
+      : sheet.initial.type === "credit_card"
+        ? "Nueva tarjeta"
+        : "Nueva cuenta";
+  if (sheet?.type === "loan") title = "Registrar préstamo";
 
   return (
     <AppDataContext.Provider value={value}>
@@ -116,6 +127,7 @@ export function AppDataProvider({
         {sheet?.type === "planned" && <PlannedForm initial={sheet.initial} onDone={close} />}
         {sheet?.type === "event" && <EventForm initial={sheet.initial} onDone={close} />}
         {sheet?.type === "account" && <AccountForm initial={sheet.initial} onDone={close} />}
+        {sheet?.type === "loan" && <LoanForm initial={sheet.initial} onDone={close} />}
       </Modal>
     </AppDataContext.Provider>
   );

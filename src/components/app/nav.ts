@@ -1,5 +1,5 @@
 import {
-  ArrowLeftRight, Brain, CalendarDays, CalendarClock, ChartColumn, ChartSpline, CreditCard, FileBarChart, FileUp,
+  ArrowLeftRight, Brain, CalendarDays, CalendarClock, ChartColumn, ChartSpline, CreditCard, FileBarChart, FileUp, HandCoins,
   Landmark, LayoutDashboard, PiggyBank, Scale, Target, TrendingUp, Users, Wallet, Waves, type LucideIcon,
 } from "lucide-react";
 
@@ -14,6 +14,7 @@ export const MAIN_NAV: NavItem[] = [
   { href: "/movimientos", label: "Movimientos", icon: ArrowLeftRight },
   { href: "/cuentas", label: "Cuentas", icon: Wallet },
   { href: "/tarjetas", label: "Tarjetas", icon: CreditCard },
+  { href: "/prestamos", label: "Préstamos", icon: HandCoins },
   { href: "/programados", label: "Programación", icon: CalendarClock },
   { href: "/flujo-de-caja", label: "Flujo de caja", icon: Waves },
   { href: "/calendario", label: "Calendario", icon: CalendarDays },
@@ -22,7 +23,6 @@ export const MAIN_NAV: NavItem[] = [
 export const UPCOMING_NAV: NavItem[] = [
   { href: "/pronto/conciliacion", label: "Conciliación", icon: FileUp },
   { href: "/pronto/presupuesto", label: "Presupuesto", icon: PiggyBank },
-  { href: "/pronto/deudas", label: "Deudas", icon: Landmark },
   { href: "/pronto/metas", label: "Metas", icon: Target },
   { href: "/pronto/inversiones", label: "Inversiones", icon: TrendingUp },
   { href: "/pronto/patrimonio", label: "Patrimonio", icon: Scale },

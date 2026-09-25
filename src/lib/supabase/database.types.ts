@@ -325,6 +325,8 @@ export type Database = {
         | "investment"
         | "credit_card"
         | "other"
+        | "loan_receivable"
+        | "loan_payable"
       category_kind: "income" | "expense"
       currency_code: "COP" | "USD" | "EUR" | "MXN" | "GBP"
       event_type: "birthday" | "appointment" | "activity" | "reminder" | "other"

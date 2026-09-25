@@ -60,8 +60,8 @@ export function TransactionForm({ initial, onDone }: { initial: TxInitial; onDon
     if (accountId) return;
     try {
       const last = localStorage.getItem(LAST_ACCOUNT_KEY);
-      const fallback = accounts.find((a) => !a.is_archived && a.type !== "credit_card") ?? accounts[0];
-      const pick = accounts.find((a) => a.id === last && !a.is_archived) ?? fallback;
+      const fallback = accounts.find((a) => !a.is_archived && a.type !== "credit_card" && !a.type.startsWith("loan_")) ?? accounts[0];
+      const pick = accounts.find((a) => a.id === last && !a.is_archived && !a.type.startsWith("loan_")) ?? fallback;
       if (pick) setAccountId(pick.id);
     } catch {
       /* sin almacenamiento local */

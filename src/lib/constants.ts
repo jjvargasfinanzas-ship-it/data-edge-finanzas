@@ -12,13 +12,19 @@ export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   investment: "Cuenta de inversión",
   credit_card: "Tarjeta de crédito",
   other: "Otra",
+  loan_receivable: "Préstamo que hice",
+  loan_payable: "Préstamo que recibí",
 };
+
+export const LOAN_TYPES: AccountType[] = ["loan_receivable", "loan_payable"];
+export const isLoan = (t: AccountType) => LOAN_TYPES.includes(t);
 
 export const ACCOUNT_GROUPS: { label: string; types: AccountType[] }[] = [
   { label: "Bancos", types: ["bank_savings", "bank_checking"] },
   { label: "Efectivo y billeteras", types: ["cash", "digital_wallet"] },
   { label: "Inversión", types: ["investment"] },
   { label: "Tarjetas de crédito", types: ["credit_card"] },
+  { label: "Préstamos", types: ["loan_receivable", "loan_payable"] },
   { label: "Otras", types: ["other"] },
 ];
 

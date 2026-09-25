@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CalendarClock, CalendarPlus, ExternalLink, LayoutDashboard, Lock,
+  ArrowDownLeft, ArrowLeftRight, HandCoins, ArrowUpRight, CalendarClock, CalendarPlus, ExternalLink, LayoutDashboard, Lock,
   LogOut, Menu, Plus, Settings, Waves, CalendarDays, X,
 } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
@@ -81,7 +81,7 @@ function SidebarContent({ path, name, onNavigate }: { path: string; name: string
 }
 
 function QuickActions({ className, compact }: { className?: string; compact?: boolean }) {
-  const { openTransaction, openPlanned, openEvent } = useAppData();
+  const { openTransaction, openPlanned, openEvent, openLoan } = useAppData();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -103,6 +103,7 @@ function QuickActions({ className, compact }: { className?: string; compact?: bo
     { label: "Registrar gasto", icon: ArrowUpRight, tone: "text-out-ink bg-series-out/10", run: () => openTransaction({ kind: "expense" }) },
     { label: "Registrar ingreso", icon: ArrowDownLeft, tone: "text-teal-700 bg-teal-50", run: () => openTransaction({ kind: "income" }) },
     { label: "Transferencia", icon: ArrowLeftRight, tone: "text-navy-700 bg-navy-900/5", run: () => openTransaction({ kind: "transfer" }) },
+    { label: "Préstamo (presté o me prestaron)", icon: HandCoins, tone: "text-navy-700 bg-navy-900/5", run: () => openLoan({}) },
     { label: "Programar ingreso", icon: CalendarClock, tone: "text-teal-700 bg-teal-50", run: () => openPlanned({ kind: "income" }) },
     { label: "Programar gasto o pago", icon: CalendarClock, tone: "text-out-ink bg-series-out/10", run: () => openPlanned({ kind: "expense" }) },
     { label: "Nuevo evento", icon: CalendarPlus, tone: "text-navy-700 bg-navy-900/5", run: () => openEvent({}) },

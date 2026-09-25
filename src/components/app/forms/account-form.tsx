@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Field, Input, Select } from "@/components/ui/field";
 import { AccountIcon } from "@/components/ui/icons";
-import { ACCOUNT_TYPE_LABELS, type AccountType } from "@/lib/constants";
+import { ACCOUNT_TYPE_LABELS, isLoan, type AccountType } from "@/lib/constants";
 import { CURRENCIES, CURRENCY_LABELS } from "@/lib/money";
 import { AmountInput } from "./amount-input";
 import { useFormResult } from "./use-form-result";
@@ -37,6 +37,8 @@ export function AccountForm({ initial, onDone }: { initial: AccountInitial; onDo
   const [currency, setCurrency] = useState(initial.currency ?? "COP");
   const [negative, setNegative] = useState((initial.opening_balance ?? 0) < 0 && initial.type !== "credit_card");
   const isCard = type === "credit_card";
+  const loan = isLoan(type);
+  const debt = isCard || type === "loan_payable";
   const fe = state.fieldErrors ?? {};
   const decimals = currency !== "COP";
 
@@ -46,6 +48,11 @@ export function AccountForm({ initial, onDone }: { initial: AccountInitial; onDo
       <input type="hidden" name="type" value={type} />
       <input type="hidden" name="balance_sign" value={negative ? "negative" : "positive"} />
 
+      {loan ? (
+        <p className="flex items-center gap-2 rounded-xl bg-canvas p-2 text-sm font-semibold text-ink">
+          <AccountIcon type={type} className="size-8" /> {ACCOUNT_TYPE_LABELS[type]}
+        </p>
+      ) : (
       <Field label="Tipo">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {TYPES.map((t) => (
@@ -65,6 +72,7 @@ export function AccountForm({ initial, onDone }: { initial: AccountInitial; onDo
           ))}
         </div>
       </Field>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Nombre" htmlFor="name" error={fe.name}>
@@ -77,7 +85,7 @@ export function AccountForm({ initial, onDone }: { initial: AccountInitial; onDo
             placeholder={isCard ? "Ej. Visa Bancolombia" : "Ej. Ahorros Bancolombia"}
           />
         </Field>
-        <Field label="Entidad (opcional)" htmlFor="institution">
+        <Field label={loan ? "Persona o entidad" : "Entidad (opcional)"} htmlFor="institution">
           <Input id="institution" name="institution" maxLength={80} defaultValue={initial.institution ?? ""} placeholder="Ej. Bancolombia" />
         </Field>
       </div>
@@ -93,10 +101,16 @@ export function AccountForm({ initial, onDone }: { initial: AccountInitial; onDo
           </Select>
         </Field>
         <Field
-          label={isCard ? "Deuda actual" : "Saldo actual"}
+          label={loan ? (type === "loan_payable" ? "Deuda inicial" : "Saldo inicial por cobrar") : isCard ? "Deuda actual" : "Saldo actual"}
           htmlFor="opening_balance"
           error={fe.opening_balance}
-          hint={initial.id ? "Saldo a la fecha de apertura; los movimientos se suman aparte." : "Lo que tienes hoy en esta cuenta."}
+          hint={
+            loan
+              ? "Normalmente 0: el valor prestado entra como transferencia. Úsalo solo para préstamos anteriores."
+              : initial.id
+                ? "Saldo a la fecha de apertura; los movimientos se suman aparte."
+                : "Lo que tienes hoy en esta cuenta."
+          }
         >
           <AmountInput
             id="opening_balance"
@@ -105,7 +119,7 @@ export function AccountForm({ initial, onDone }: { initial: AccountInitial; onDo
             prefix={currency === "COP" ? "$" : currency}
             defaultValue={initial.opening_balance !== undefined ? Math.abs(initial.opening_balance) : undefined}
           />
-          {!isCard && (
+          {!debt && !loan && (
             <label className="flex items-center gap-2 text-xs text-ink-2">
               <input type="checkbox" checked={negative} onChange={(e) => setNegative(e.target.checked)} className="accent-teal-600" />
               El saldo es negativo (sobregiro)

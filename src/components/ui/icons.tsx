@@ -1,7 +1,7 @@
 import {
   Briefcase, Building, Car, CircleDashed, CirclePlus, FileSignature, Gift, GraduationCap, HeartPulse, House,
   Landmark, Percent, Plane, Plug, Popcorn, Receipt, Repeat, Shield, ShoppingBag, Store, TrendingUp, Users, Utensils,
-  Wallet, CreditCard, Banknote, Smartphone, PiggyBank, ChartLine, Tags, type LucideIcon,
+  Wallet, CreditCard, Banknote, Smartphone, PiggyBank, ChartLine, Tags, HandCoins, Handshake, type LucideIcon,
 } from "lucide-react";
 import type { AccountType } from "@/lib/constants";
 import { cn } from "./cn";
@@ -34,6 +34,8 @@ const ACCOUNT_ICONS: Record<AccountType, LucideIcon> = {
   investment: ChartLine,
   credit_card: CreditCard,
   other: Wallet,
+  loan_receivable: HandCoins,
+  loan_payable: Handshake,
 };
 
 export function AccountIcon({ type, className }: { type: AccountType; className?: string }) {
