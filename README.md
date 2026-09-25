@@ -62,7 +62,10 @@ Regenerar tipos: `npx supabase gen types typescript --project-id dxeuucxauivmbcu
 
 ## Cómo se calculan los saldos
 
-- **Disponible hoy** = saldo de cuentas de banco, efectivo y billeteras con los movimientos **registrados**. Lo programado nunca suma hasta que se marque como recibido o pagado.
+- **Saldo real disponible** = saldo inicial de cada cuenta de banco, efectivo y billetera + movimientos **confirmados con fecha hasta hoy**. Lo programado nunca suma hasta que se confirme ("¿Se recibió? Sí / Otro valor / No").
+- Un movimiento nuevo con fecha futura se guarda como **programado** (no como real). La migración `20260925100000` convierte los que ya existían.
+- Cada cuenta muestra "¿De dónde sale este saldo?": saldo inicial + ingresos − gastos ± transferencias.
+- **Flujo real** (pestaña Real) reconstruye el saldo día a día solo con lo confirmado. **Flujo proyectado** (pestaña Proyectado) parte del real y suma lo programado pendiente.
 - **Por recibir / Por pagar** = lo programado pendiente hasta la fecha elegida (incluye vencidos de los últimos 45 días y pagos de tarjeta estimados).
 - **Saldo proyectado** = Disponible + Por recibir − Por pagar.
 - Cada ocurrencia programada puede estar: pendiente, hoy, vencida, parcial (se registró una parte), completa, cerrada con diferencia u omitida.

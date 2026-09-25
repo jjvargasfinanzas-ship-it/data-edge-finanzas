@@ -41,7 +41,7 @@ describe("projectCashflow", () => {
       p({ id: "arr", kind: "expense", name: "Arriendo", amount: 1_500_000, start_date: "2026-01-01" }),
       p({ id: "net", kind: "expense", name: "Netflix", amount: 40_000, account_id: "visa", start_date: "2026-01-10" }),
     ];
-    const r = projectCashflow({ ...base, planned, settlements: [] });
+    const r = projectCashflow({ ...base, planned, settlements: [], overdueLookbackDays: 0 });
     const day = (d: string) => r.days.find((x) => x.date === d)!;
     expect(day("2026-09-30").inflow).toBe(3_000_000);
     expect(day("2026-10-01").outflow).toBe(1_500_000);
@@ -59,10 +59,14 @@ describe("projectCashflow", () => {
     expect(r.occurrences.find((o) => o.plannedItemId === "pv")!.cashEffect).toBe(-200_000);
   });
 
-  it("fechas anteriores a la creación no quedan vencidas", () => {
-    const planned = [p({ id: "old", kind: "expense", name: "Viejo", amount: 10, start_date: "2026-01-01", created_at: "2026-09-24T12:00:00Z" })];
+  it("antes de la creación solo queda por confirmar la ocurrencia más reciente", () => {
+    const planned = [
+      p({ id: "old", kind: "expense", name: "Mensual viejo", amount: 10, start_date: "2026-01-05", created_at: "2026-09-24T12:00:00Z" }),
+      p({ id: "once", kind: "expense", name: "Arriendo", amount: 20, start_date: "2026-09-14", frequency: "once", created_at: "2026-09-24T12:00:00Z" }),
+    ];
     const r = projectCashflow({ ...base, planned, settlements: [] });
-    expect(r.occurrences.filter((o) => o.overdue)).toHaveLength(0);
+    const overdue = r.occurrences.filter((o) => o.overdue);
+    expect(overdue.map((o) => `${o.name}|${o.dueDate}`).sort()).toEqual(["Arriendo|2026-09-14", "Mensual viejo|2026-09-05"]);
   });
 
   it("vencidos sin registrar pasan a hoy y los registrados se excluyen", () => {
@@ -73,6 +77,7 @@ describe("projectCashflow", () => {
     const r = projectCashflow({
       ...base,
       planned,
+      overdueLookbackDays: 5,
       settlements: [{ planned_item_id: "agua", planned_date: "2026-09-22", received: 50_000, status: null }],
     });
     const today = r.days[0];

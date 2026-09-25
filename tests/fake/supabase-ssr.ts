@@ -58,6 +58,7 @@ function seed() {
   const usd = acc("Cuenta USD", "bank_savings", 1200, { currency: "USD", institution: "Global66" });
   const visa = acc("Visa Oro", "credit_card", -1200000, { institution: "Davivienda", credit_limit: 6000000, statement_day: 20, due_day: 5 });
   const inv = acc("Fondo de inversión", "investment", 8000000);
+  const lulo = acc("Lulo", "bank_savings", 6397, { institution: "Lulo Bank" });
 
   if (onboarded) {
     const tx = (date: string, kind: string, amount: number, account_id: string, extra: Row = {}) =>
@@ -97,6 +98,10 @@ function seed() {
     pl("Netflix", "expense", 45000, visa, "2026-01-06", { category_id: sus });
     pl("Aporte fondo", "transfer", 500000, banco, "2026-01-10", { to_account_id: inv });
     pl("Seguro vehículo", "expense", 1850000, banco, "2026-10-28", { frequency: "yearly", category_id: sal });
+    // Caso real: ingreso con fecha futura convertido a programado único
+    pl("Ingreso", "income", 430000, lulo, "2026-10-15", { frequency: "once", created_at: "2026-09-24T12:00:00Z", notes: "Convertido automáticamente: se había registrado como movimiento con fecha futura." });
+    // Un movimiento con fecha futura (no debe contar en el saldo real)
+    tx("2026-10-20", "income", 999000, lulo, { description: "Futuro (no cuenta)" });
     // Vincular movimientos reales a sus programados (septiembre)
     const link = (desc: string, pid: string, date: string) => {
       const t = db.transactions.find((x) => x.description === desc && x.date.startsWith("2026-09"));
@@ -126,9 +131,11 @@ const store = (): Record<string, Row[]> => (G.__deFake ??= seed());
 
 function balances(): Row[] {
   const db = store();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(new Date());
   return db.accounts.map((a) => {
     let b = Number(a.opening_balance);
     for (const t of db.transactions) {
+      if (t.date > today) continue;
       if (t.account_id === a.id) b += t.kind === "income" ? Number(t.amount) : -Number(t.amount);
       if (t.to_account_id === a.id) b += Number(t.to_amount ?? t.amount);
     }

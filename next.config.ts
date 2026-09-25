@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     : {}),
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "date-fns"],
+    // Reutiliza páginas ya visitadas al navegar (30 s): menos esperas entre secciones
+    staleTimes: { dynamic: 30, static: 180 },
   },
   async headers() {
     return [
