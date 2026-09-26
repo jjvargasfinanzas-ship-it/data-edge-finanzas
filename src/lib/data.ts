@@ -7,6 +7,7 @@ import { addDays, endOfMonth, todayInTz, type ISODate } from "./dates";
 import { buildRateTable, convert, type Currency, type RateTable } from "./money";
 import { projectCashflow, type AccountLite, type Settlement } from "./cashflow";
 import { buildPlanRows, summarizePlan } from "./month-plan";
+import { summarizeObligation } from "./obligations";
 
 export type Profile = Tables<"profiles">;
 export type Account = Tables<"accounts"> & { balance: number };
@@ -216,4 +217,77 @@ export const getPeriodPlan = cache(async (from: ISODate, to: ISODate) => {
     unplannedIncome,
     unplannedExpense,
   };
+});
+
+// ------------------------------------------------------------------
+// Obligaciones
+// ------------------------------------------------------------------
+export type ObligationRow = Tables<"obligations">;
+export type ObligationPayment = {
+  id: string;
+  date: ISODate;
+  amount: number;
+  /** Valor en la moneda de la obligación. */
+  value: number;
+  account_id: string;
+  description: string | null;
+};
+
+/** Obligaciones con su cronograma, pagos aplicados y estado. */
+export const getObligations = cache(async () => {
+  const { supabase, today } = await getContext();
+  const [{ data: rows }, { data: pays }, accounts, rates] = await Promise.all([
+    supabase.from("obligations").select("*").order("first_due_date"),
+    supabase
+      .from("transactions")
+      .select("id, obligation_id, date, amount, account_id, description")
+      .not("obligation_id", "is", null)
+      .order("date", { ascending: false })
+      .limit(5000),
+    getAccounts(),
+    getRates(),
+  ]);
+  const accCur = new Map(accounts.map((a) => [a.id, a.currency]));
+  const obligations = rows ?? [];
+  const oblCur = new Map(obligations.map((o) => [o.id, o.currency as Currency]));
+  const payments = new Map<string, ObligationPayment[]>();
+  for (const p of pays ?? []) {
+    if (!p.obligation_id) continue;
+    const from = accCur.get(p.account_id) ?? "COP";
+    const to = oblCur.get(p.obligation_id) ?? from;
+    const list = payments.get(p.obligation_id) ?? [];
+    list.push({
+      id: p.id,
+      date: p.date,
+      amount: Number(p.amount),
+      value: convert(Number(p.amount), from, to, rates),
+      account_id: p.account_id,
+      description: p.description,
+    });
+    payments.set(p.obligation_id, list);
+  }
+  const items = obligations.map((o) => {
+    const list = payments.get(o.id) ?? [];
+    const summary = summarizeObligation(
+      {
+        id: o.id,
+        creditor: o.creditor,
+        creditor_type: o.creditor_type,
+        kind: o.kind,
+        concept: o.concept,
+        currency: o.currency as Currency,
+        original_amount: Number(o.original_amount),
+        installment_amount: o.installment_amount === null ? null : Number(o.installment_amount),
+        installments: o.installments,
+        frequency: o.frequency,
+        first_due_date: o.first_due_date,
+        status: o.status,
+        account_id: o.account_id,
+      },
+      list.reduce((s, p) => s + p.value, 0),
+      today,
+    );
+    return { row: o, summary, payments: list };
+  });
+  return { items, rates };
 });

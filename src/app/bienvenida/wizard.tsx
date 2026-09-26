@@ -94,7 +94,7 @@ export function Wizard({ firstName, today }: { firstName: string; today: string 
     return (
       <Shell>
         <div className="py-10 text-center animate-fade-up">
-          <div className="mx-auto grid size-20 place-items-center rounded-3xl bg-teal-500 text-navy-950 shadow-[0_20px_50px_-15px_rgb(20_191_168/0.8)]">
+          <div className="mx-auto grid size-20 place-items-center rounded-3xl bg-primary text-on-primary shadow-[0_20px_50px_-15px_rgb(20_191_168/0.8)]">
             <Sparkles className="size-9" />
           </div>
           <h1 className="mt-8 font-display text-4xl font-semibold text-ink">Tu espacio financiero está listo.</h1>

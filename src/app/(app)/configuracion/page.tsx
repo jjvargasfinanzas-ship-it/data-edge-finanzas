@@ -29,7 +29,7 @@ export default async function ConfiguracionPage() {
         </Card>
 
         <Card className="xl:col-span-2">
-          <CardHeader title="Apariencia" subtitle="Elige la paleta de colores. Se aplica en menús, botones, gráficos y calendario." />
+          <CardHeader title="Apariencia" subtitle="Elige la paleta visual. Cambia solo la apariencia: fondos, tarjetas, botones, textos e indicadores." />
           <div className="p-5">
             <ThemePicker current={profile.theme ?? "data-edge"} />
           </div>

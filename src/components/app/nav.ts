@@ -1,6 +1,6 @@
 import {
   ArrowLeftRight, Brain, CalendarDays, CalendarClock, ChartColumn, ChartSpline, CreditCard, FileBarChart, FileUp, HandCoins,
-  Landmark, LayoutDashboard, PiggyBank, Scale, Target, TrendingUp, Users, Wallet, Waves, type LucideIcon,
+  Landmark, LayoutDashboard, ReceiptText, PiggyBank, Scale, Target, TrendingUp, Users, Wallet, Waves, type LucideIcon,
 } from "lucide-react";
 
 export interface NavItem {
@@ -14,6 +14,7 @@ export const MAIN_NAV: NavItem[] = [
   { href: "/movimientos", label: "Movimientos", icon: ArrowLeftRight },
   { href: "/cuentas", label: "Cuentas", icon: Wallet },
   { href: "/tarjetas", label: "Tarjetas", icon: CreditCard },
+  { href: "/obligaciones", label: "Obligaciones", icon: ReceiptText },
   { href: "/prestamos", label: "Préstamos", icon: HandCoins },
   { href: "/programados", label: "Programación", icon: CalendarClock },
   { href: "/flujo-de-caja", label: "Flujo de caja", icon: Waves },

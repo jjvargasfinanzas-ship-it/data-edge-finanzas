@@ -36,6 +36,8 @@
   --color-tint: #eef8f7;
   --color-tint-2: #f1f4f9;
   --color-tint-strong: #d7f0ec;
+  --color-primary: #14bfa8;
+  --color-on-primary: #051226;
   --color-card: #f6fbfa;
   --color-card-border: #e1efec;
   --color-pastel-teal: #dcf3ef;
@@ -77,101 +79,56 @@
 
 /* ================================================================
    Paletas de color (el usuario elige en Configuración)
+   Actual (Data Edge) es la base de @theme. Cada paleta redefine
+   estructura (navy), acento (teal), textos y series; los tonos pastel,
+   fondos y bordes se derivan solos (ver bloque siguiente).
    ================================================================ */
-[data-theme="oceano"] {
-  --color-navy-950: #07142e;
-  --color-navy-900: #0c1f45;
-  --color-navy-800: #12295a;
-  --color-navy-700: #1b3a78;
-  --color-navy-600: #264b94;
-  --color-navy-500: #3b63b3;
-  --color-teal-50: #eaf6fd;
-  --color-teal-200: #b3e2f8;
-  --color-teal-300: #7dccf2;
-  --color-teal-400: #38b0e8;
-  --color-teal-500: #0e98d8;
-  --color-teal-600: #0a7cb5;
-  --color-teal-700: #086492;
-  --color-series-in: #0a7cb5;
-  --color-series-out: #e0694a;
-  --color-out-ink: #b4482c;
+[data-theme="rosado"] {
+  --color-navy-950: #2a1420;
+  --color-navy-900: #3d1d2e;
+  --color-navy-800: #52263d;
+  --color-navy-700: #6b3350;
+  --color-navy-600: #874466;
+  --color-navy-500: #a35a7e;
+  --color-teal-50: #fdf2f6;
+  --color-teal-200: #f7d3e1;
+  --color-teal-300: #efb0c8;
+  --color-teal-400: #e48aab;
+  --color-teal-500: #d66b93;
+  --color-teal-600: #b84d77;
+  --color-teal-700: #933a5c;
+  --color-ink: #2e2230;
+  --color-ink-2: #5a4858;
+  --color-muted: #7c6a78;
+  --color-series-in: #b84d77;
+  --color-series-out: #5b7fc4;
+  --color-out-ink: #3f63a8;
   --color-event: #8b5cf6;
 }
-[data-theme="esmeralda"] {
-  --color-navy-950: #06180f;
-  --color-navy-900: #0b2a1c;
-  --color-navy-800: #0f3826;
-  --color-navy-700: #164b33;
-  --color-navy-600: #1e5e41;
-  --color-navy-500: #2f7a57;
-  --color-teal-50: #e9faf2;
-  --color-teal-200: #b0ecd0;
-  --color-teal-300: #74dcad;
-  --color-teal-400: #34c98a;
-  --color-teal-500: #12b373;
-  --color-teal-600: #0c935d;
-  --color-teal-700: #09754b;
-  --color-series-in: #0c935d;
-  --color-series-out: #8b5cf6;
-  --color-out-ink: #6d3fd6;
-  --color-event: #db2777;
-}
-[data-theme="violeta"] {
-  --color-navy-950: #120d2b;
-  --color-navy-900: #1d1545;
-  --color-navy-800: #271d5c;
-  --color-navy-700: #342877;
-  --color-navy-600: #433494;
-  --color-navy-500: #5a4bb3;
-  --color-teal-50: #f3effe;
-  --color-teal-200: #d9ccfb;
-  --color-teal-300: #bda7f7;
-  --color-teal-400: #9f7ff1;
-  --color-teal-500: #8661e8;
-  --color-teal-600: #6d45d0;
-  --color-teal-700: #5835ab;
-  --color-series-in: #6d45d0;
-  --color-series-out: #e0694a;
-  --color-out-ink: #b4482c;
-  --color-event: #0e98d8;
-}
-[data-theme="grafito"] {
-  --color-navy-950: #111317;
-  --color-navy-900: #1a1d23;
-  --color-navy-800: #23272f;
-  --color-navy-700: #2f343e;
-  --color-navy-600: #3e4450;
-  --color-navy-500: #555c6b;
-  --color-teal-50: #fff7e6;
-  --color-teal-200: #fde2a8;
-  --color-teal-300: #fbcd6b;
-  --color-teal-400: #f7b733;
-  --color-teal-500: #eea10f;
-  --color-teal-600: #c7830a;
-  --color-teal-700: #9d6608;
-  --color-series-in: #c7830a;
-  --color-series-out: #4f7cc9;
-  --color-out-ink: #3a5fa8;
-  --color-event: #8b5cf6;
-}
-[data-theme="vino"] {
-  --color-navy-950: #1f0b13;
-  --color-navy-900: #33111f;
-  --color-navy-800: #45172a;
-  --color-navy-700: #5c1f38;
-  --color-navy-600: #742848;
-  --color-navy-500: #93375c;
-  --color-teal-50: #fdf6e9;
-  --color-teal-200: #f5dfb0;
-  --color-teal-300: #ecc777;
-  --color-teal-400: #e2ae46;
-  --color-teal-500: #d4962a;
-  --color-teal-600: #b07a1f;
-  --color-teal-700: #8a5f18;
-  --color-series-in: #b07a1f;
-  --color-series-out: #4f7cc9;
-  --color-out-ink: #3a5fa8;
-  --color-event: #8b5cf6;
+[data-theme="clasico"] {
+  --color-navy-950: #09090b;
+  --color-navy-900: #18181b;
+  --color-navy-800: #27272a;
+  --color-navy-700: #3f3f46;
+  --color-navy-600: #52525b;
+  --color-navy-500: #71717a;
+  --color-teal-50: #f6f6f7;
+  --color-teal-200: #e4e4e7;
+  --color-teal-300: #d4d4d8;
+  --color-teal-400: #a1a1aa;
+  --color-teal-500: #71717a;
+  --color-teal-600: #3f3f46;
+  --color-teal-700: #18181b;
+  --color-ink: #18181b;
+  --color-ink-2: #3f3f46;
+  --color-muted: #6b6b73;
+  --color-positive: #3d7a5c;
+  --color-negative: #b4504b;
+  --color-warning: #99702a;
+  --color-series-in: #3f3f46;
+  --color-series-out: #a1a1aa;
+  --color-out-ink: #52525b;
+  --color-event: #71717a;
 }
 
 /* Tonos pastel derivados de la paleta activa: se declaran también en [data-theme]
@@ -191,6 +148,14 @@
   --color-pastel-navy: color-mix(in oklab, var(--color-navy-500) 17%, #fbfcff);
   --color-pastel-mix: color-mix(in oklab, color-mix(in oklab, var(--color-teal-500) 50%, var(--color-navy-500)) 15%, #fafcfd);
   --color-pastel-sky: color-mix(in oklab, var(--color-teal-400) 11%, #fbfdfd);
+  --color-primary: var(--color-teal-500);
+  --color-on-primary: var(--color-navy-950);
+}
+
+/* Clásico: botón principal negro con texto blanco (sobrio y de alto contraste). */
+[data-theme="clasico"] {
+  --color-primary: #18181b;
+  --color-on-primary: #ffffff;
 }
 
 @layer base {

@@ -112,7 +112,7 @@ function Row({ o, baseCurrency, showDate = true }: { o: PendingItem; baseCurrenc
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {o.flow === "card_estimate" ? (
-              <button type="button" onClick={otherValue} className={cn(chip, "bg-teal-500 text-navy-950 hover:bg-teal-400")}>
+              <button type="button" onClick={otherValue} className={cn(chip, "bg-primary text-on-primary hover:opacity-90")}>
                 <CreditCard className="size-3.5" /> Pagar tarjeta
               </button>
             ) : due ? (
@@ -121,7 +121,7 @@ function Row({ o, baseCurrency, showDate = true }: { o: PendingItem; baseCurrenc
                 <button
                   type="button"
                   onClick={() => run(() => confirmOccurrence(o.plannedItemId!, o.dueDate))}
-                  className={cn(chip, "bg-teal-500 text-navy-950 hover:bg-teal-400")}
+                  className={cn(chip, "bg-primary text-on-primary hover:opacity-90")}
                 >
                   <Check className="size-3.5" strokeWidth={3} /> Sí{o.state === "partial" ? ", el resto" : ""}
                 </button>

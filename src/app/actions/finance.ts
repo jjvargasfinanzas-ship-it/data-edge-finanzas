@@ -158,7 +158,7 @@ export async function setOccurrenceStatus(
 }
 
 export async function updateTheme(theme: string): Promise<ActionState> {
-  const parsed = z.enum(["data-edge", "oceano", "esmeralda", "violeta", "grafito", "vino"]).safeParse(theme);
+  const parsed = z.enum(["data-edge", "rosado", "clasico"]).safeParse(theme);
   if (!parsed.success) return fail("Paleta no válida");
   const { supabase, userId } = await getContext();
   const { error } = await supabase.from("profiles").update({ theme: parsed.data }).eq("id", userId);

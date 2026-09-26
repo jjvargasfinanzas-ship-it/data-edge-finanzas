@@ -49,7 +49,7 @@ export type TileTone = "neutral" | "positive" | "negative" | "brand";
  * Fondo pastel de la tarjeta, derivado de la paleta activa (ver globals.css).
  * "card" es el tono base de todas las tarjetas; los demás dan identidad a cada indicador.
  */
-export type TileAccent = "card" | "teal" | "navy" | "mix" | "sky";
+export type TileAccent = "card" | "teal" | "navy" | "mix" | "sky" | "alert" | "warn";
 
 const accentBg: Record<TileAccent, string> = {
   card: "bg-card border-card-border",
@@ -57,6 +57,8 @@ const accentBg: Record<TileAccent, string> = {
   navy: "bg-pastel-navy border-transparent",
   mix: "bg-pastel-mix border-transparent",
   sky: "bg-pastel-sky border-card-border",
+  alert: "bg-negative-50 border-transparent",
+  warn: "bg-warning-50 border-transparent",
 };
 
 const valueTone: Record<TileTone, string> = {
@@ -81,10 +83,12 @@ export interface StatTileProps {
   /** Resalta la pista (p. ej. "Agregar"). */
   hintAccent?: boolean;
   accent?: TileAccent;
+  /** Reemplaza la cifra de dinero por un texto (p. ej. un conteo). */
+  valueText?: string;
 }
 
 /** Tarjeta indicador: misma altura, mismo ritmo y misma tipografía en todas las pantallas. */
-export function StatTile({ label, value, currency, hint, icon, tone, href, signed, hintAccent, accent = "card" }: StatTileProps) {
+export function StatTile({ label, value, currency, hint, icon, tone, href, signed, hintAccent, accent = "card", valueText }: StatTileProps) {
   const t = tone ?? (value < 0 ? "negative" : "neutral");
   const body = (
     <>
@@ -98,14 +102,18 @@ export function StatTile({ label, value, currency, hint, icon, tone, href, signe
         {href && <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-ink-2/50 transition group-hover:translate-x-0.5 group-hover:text-teal-700" aria-hidden />}
       </div>
       <div className="@container mt-auto pt-2.5">
-        <FitMoney value={value} currency={currency} signed={signed} className={valueTone[t]} />
+        {valueText !== undefined ? (
+          <p className={cn("num text-[22px] leading-tight font-semibold", valueTone[t])}>{valueText}</p>
+        ) : (
+          <FitMoney value={value} currency={currency} signed={signed} className={valueTone[t]} />
+        )}
         {hint && <p className={cn("mt-0.5 truncate text-[11px]", hintAccent ? "font-semibold text-teal-700" : "text-ink-2/75")}>{hint}</p>}
       </div>
     </>
   );
   const cls = cn("card group flex h-full min-h-[104px] flex-col p-3.5 sm:p-4", accentBg[accent]);
   return href ? (
-    <Link href={href} aria-label={`${label}: ${formatMoney(value, currency)}. Ver detalle`} className={cn(cls, "card-link")}>
+    <Link href={href} aria-label={`${label}: ${valueText ?? formatMoney(value, currency)}. Ver detalle`} className={cn(cls, "card-link")}>
       {body}
     </Link>
   ) : (
@@ -114,7 +122,7 @@ export function StatTile({ label, value, currency, hint, icon, tone, href, signe
 }
 
 /** Rejilla simétrica: todas las tarjetas con el mismo ancho y la misma altura. */
-export function TileGrid({ children, cols = 4, className }: { children: React.ReactNode; cols?: 2 | 3 | 4; className?: string }) {
+export function TileGrid({ children, cols = 4, className }: { children: React.ReactNode; cols?: 2 | 3 | 4 | 6; className?: string }) {
   return (
     <div
       className={cn(
@@ -122,6 +130,7 @@ export function TileGrid({ children, cols = 4, className }: { children: React.Re
         cols === 2 && "grid-cols-2",
         cols === 3 && "grid-cols-3 max-sm:gap-2",
         cols === 4 && "grid-cols-2 lg:grid-cols-4",
+        cols === 6 && "grid-cols-2 lg:grid-cols-3",
         className,
       )}
     >

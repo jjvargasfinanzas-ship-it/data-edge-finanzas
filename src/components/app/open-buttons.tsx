@@ -8,6 +8,8 @@ import type { PlannedInitial } from "./forms/planned-form";
 import type { EventInitial } from "./forms/event-form";
 import type { AccountInitial } from "./forms/account-form";
 import type { LoanInitial } from "./forms/loan-form";
+import type { ObligationInitial } from "./forms/obligation-form";
+import type { PaymentInitial } from "./forms/payment-form";
 
 type Props = { children: React.ReactNode; variant?: "primary" | "secondary" | "ghost" | "dark"; size?: "sm" | "md" | "lg"; className?: string; icon?: boolean };
 
@@ -87,6 +89,25 @@ export function LoanPaymentButton({
         })
       }
     >
+      {p.children}
+    </Button>
+  );
+}
+
+export function NewObligationButton({ initial, ...p }: Props & { initial?: ObligationInitial }) {
+  const { openObligation } = useAppData();
+  return (
+    <Button variant={p.variant} size={p.size} className={p.className} onClick={() => openObligation(initial)}>
+      {p.icon !== false && <Plus className="size-4" />}
+      {p.children}
+    </Button>
+  );
+}
+
+export function PayObligationButton({ initial, ...p }: Props & { initial: PaymentInitial }) {
+  const { openPayment } = useAppData();
+  return (
+    <Button variant={p.variant} size={p.size} className={p.className} onClick={() => openPayment(initial)}>
       {p.children}
     </Button>
   );

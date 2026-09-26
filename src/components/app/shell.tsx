@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowDownLeft, ArrowLeftRight, HandCoins, ArrowUpRight, CalendarClock, CalendarPlus, ExternalLink, LayoutDashboard, Lock,
-  LogOut, Menu, Plus, Settings, Waves, CalendarDays, X,
+  LogOut, Menu, Plus, ReceiptText, Settings, Waves, CalendarDays, X,
 } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { Logo } from "@/components/brand/logo";
@@ -81,7 +81,7 @@ function SidebarContent({ path, name, onNavigate }: { path: string; name: string
 }
 
 function QuickActions({ className, compact }: { className?: string; compact?: boolean }) {
-  const { openTransaction, openPlanned, openEvent, openLoan } = useAppData();
+  const { openTransaction, openPlanned, openEvent, openLoan, openObligation } = useAppData();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -103,6 +103,7 @@ function QuickActions({ className, compact }: { className?: string; compact?: bo
     { label: "Registrar gasto", icon: ArrowUpRight, tone: "text-out-ink bg-series-out/10", run: () => openTransaction({ kind: "expense" }) },
     { label: "Registrar ingreso", icon: ArrowDownLeft, tone: "text-teal-700 bg-teal-50", run: () => openTransaction({ kind: "income" }) },
     { label: "Transferencia", icon: ArrowLeftRight, tone: "text-navy-700 bg-navy-900/5", run: () => openTransaction({ kind: "transfer" }) },
+    { label: "Nueva obligación o deuda", icon: ReceiptText, tone: "text-navy-700 bg-navy-900/5", run: () => openObligation({}) },
     { label: "Préstamo (presté o me prestaron)", icon: HandCoins, tone: "text-navy-700 bg-navy-900/5", run: () => openLoan({}) },
     { label: "Programar ingreso", icon: CalendarClock, tone: "text-teal-700 bg-teal-50", run: () => openPlanned({ kind: "income" }) },
     { label: "Programar gasto o pago", icon: CalendarClock, tone: "text-out-ink bg-series-out/10", run: () => openPlanned({ kind: "expense" }) },
@@ -118,7 +119,7 @@ function QuickActions({ className, compact }: { className?: string; compact?: bo
         aria-haspopup="menu"
         aria-label="Acción rápida"
         className={cn(
-          "grid place-items-center rounded-2xl bg-teal-500 text-navy-950 shadow-[0_8px_20px_-10px_rgb(30_42_59/0.35)] transition-transform hover:bg-teal-400 active:scale-95",
+          "grid place-items-center rounded-2xl bg-primary text-on-primary shadow-[0_8px_20px_-10px_rgb(30_42_59/0.35)] transition-transform hover:opacity-90 active:scale-95",
           compact ? "size-13" : "h-10 grid-flow-col gap-2 px-4 text-sm font-semibold",
         )}
       >
@@ -130,7 +131,7 @@ function QuickActions({ className, compact }: { className?: string; compact?: bo
           role="menu"
           className={cn(
             "absolute z-40 w-64 overflow-hidden rounded-2xl border border-line bg-surface p-1.5 shadow-pop animate-scale-in",
-            compact ? "bottom-[calc(100%+12px)] left-1/2 -translate-x-1/2 origin-bottom" : "top-[calc(100%+8px)] right-0 origin-top-right",
+            compact ? "bottom-[calc(100%+12px)] right-0 origin-bottom-right" : "top-[calc(100%+8px)] right-0 origin-top-right",
           )}
         >
           {actions.map((a) => (
@@ -185,7 +186,7 @@ export function AppShell({
   const bottom = [
     { href: "/inicio", label: "Inicio", icon: LayoutDashboard },
     { href: "/movimientos", label: "Movimientos", icon: ArrowLeftRight },
-    null,
+    { href: "/obligaciones", label: "Obligaciones", icon: ReceiptText },
     { href: "/flujo-de-caja", label: "Flujo", icon: Waves },
     { href: "/calendario", label: "Calendario", icon: CalendarDays },
   ];
@@ -238,32 +239,33 @@ export function AppShell({
 
       <main className="mx-auto w-full max-w-[1200px] px-4 pt-6 pb-32 sm:px-6 lg:px-10 lg:pt-8 lg:pb-16">{children}</main>
 
+      {/* Acción rápida flotante (móvil): fuera de la barra para que las pestañas queden simétricas */}
+      <div className="fixed right-4 bottom-[calc(72px+env(safe-area-inset-bottom))] z-30 lg:hidden">
+        <QuickActions compact />
+      </div>
+
       {/* Navegación inferior móvil */}
       <nav
         className="fixed inset-x-0 bottom-0 z-30 border-t border-card-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
         aria-label="Navegación rápida"
       >
-        <div className="mx-auto grid max-w-md grid-cols-5 items-end px-2">
-          {bottom.map((b) =>
-            b === null ? (
-              <div key="fab" className="flex justify-center">
-                <QuickActions compact className="-translate-y-4" />
-              </div>
-            ) : (
-              <Link
-                key={b.href}
-                href={b.href}
-                aria-current={isActive(path, b.href) ? "page" : undefined}
-                className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-[10.5px] font-medium",
-                  isActive(path, b.href) ? "text-teal-700" : "text-muted",
-                )}
-              >
-                <b.icon className="size-5" strokeWidth={2.1} />
-                {b.label}
-              </Link>
-            ),
-          )}
+        <div className="mx-auto grid max-w-md grid-cols-5 px-1">
+          {bottom.map((b) => (
+            <Link
+              key={b.href}
+              href={b.href}
+              aria-current={isActive(path, b.href) ? "page" : undefined}
+              className={cn(
+                "flex min-w-0 flex-col items-center gap-1 py-2.5 text-[10px] font-medium",
+                isActive(path, b.href) ? "text-teal-700" : "text-muted",
+              )}
+            >
+              <span className={cn("grid h-6 w-10 place-items-center rounded-full transition-colors", isActive(path, b.href) && "bg-pastel-teal")}>
+                <b.icon className="size-[18px]" strokeWidth={2.1} />
+              </span>
+              <span className="max-w-full truncate">{b.label}</span>
+            </Link>
+          ))}
         </div>
       </nav>
     </div>

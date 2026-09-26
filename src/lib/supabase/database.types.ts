@@ -204,6 +204,54 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["planned_items"]["Insert"]>
         Relationships: []
       }
+      obligations: {
+        Row: {
+          account_id: string | null
+          category_id: string | null
+          concept: string
+          created_at: string
+          creditor: string
+          creditor_type: string
+          currency: Database["public"]["Enums"]["currency_code"]
+          first_due_date: string
+          frequency: Database["public"]["Enums"]["frequency"]
+          id: string
+          installment_amount: number | null
+          installments: number
+          interest_rate: number | null
+          kind: Database["public"]["Enums"]["obligation_kind"]
+          notes: string | null
+          original_amount: number
+          planned_item_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          category_id?: string | null
+          concept: string
+          created_at?: string
+          creditor: string
+          creditor_type?: string
+          currency?: Database["public"]["Enums"]["currency_code"]
+          first_due_date: string
+          frequency?: Database["public"]["Enums"]["frequency"]
+          id?: string
+          installment_amount?: number | null
+          installments?: number
+          interest_rate?: number | null
+          kind?: Database["public"]["Enums"]["obligation_kind"]
+          notes?: string | null
+          original_amount: number
+          planned_item_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["obligations"]["Insert"]>
+        Relationships: []
+      }
       planned_occurrence_status: {
         Row: {
           created_at: string
@@ -275,6 +323,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["transaction_kind"]
           notes: string | null
+          obligation_id: string | null
           planned_date: string | null
           planned_item_id: string | null
           to_account_id: string | null
@@ -292,6 +341,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["transaction_kind"]
           notes?: string | null
+          obligation_id?: string | null
           planned_date?: string | null
           planned_item_id?: string | null
           to_account_id?: string | null
@@ -340,6 +390,17 @@ export type Database = {
         | "quarterly"
         | "semiannual"
         | "yearly"
+      obligation_kind:
+        | "bank_loan"
+        | "mortgage"
+        | "vehicle"
+        | "personal"
+        | "tax"
+        | "service"
+        | "education"
+        | "health"
+        | "rent"
+        | "other"
       transaction_kind: "income" | "expense" | "transfer"
     }
     CompositeTypes: {

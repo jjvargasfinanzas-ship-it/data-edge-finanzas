@@ -15,9 +15,11 @@ export function ThemePicker({ current }: { current: string }) {
     const prev = selected;
     setSelected(id);
     // Vista previa inmediata
-    const html = document.documentElement;
-    if (id === "data-edge") delete html.dataset.theme;
-    else html.dataset.theme = id;
+    const targets = new Set<HTMLElement>([document.documentElement, ...document.querySelectorAll<HTMLElement>("[data-theme]")]);
+    for (const el of targets) {
+      if (id === "data-edge") delete el.dataset.theme;
+      else el.dataset.theme = id;
+    }
     start(async () => {
       const r = await updateTheme(id);
       if (r.ok) toast.success(r.message);
@@ -29,7 +31,7 @@ export function ThemePicker({ current }: { current: string }) {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Paleta de color" aria-busy={pending}>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Paleta de color" aria-busy={pending}>
       {THEMES.map((t) => {
         const active = selected === t.id;
         return (
@@ -41,7 +43,7 @@ export function ThemePicker({ current }: { current: string }) {
             onClick={() => pick(t.id)}
             className={cn(
               "overflow-hidden rounded-2xl border text-left transition-all",
-              active ? "border-teal-500 ring-4 ring-teal-500/15" : "border-line hover:border-line-strong",
+              active ? "border-primary ring-4 ring-primary/15" : "border-card-border bg-card hover:border-line-strong",
             )}
           >
             <div className="flex h-16" aria-hidden>
@@ -57,7 +59,7 @@ export function ThemePicker({ current }: { current: string }) {
                 <span className="block text-xs text-muted">{t.hint}</span>
               </span>
               {active && (
-                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-teal-500 text-white">
+                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-primary text-on-primary">
                   <Check className="size-3" strokeWidth={3} />
                 </span>
               )}

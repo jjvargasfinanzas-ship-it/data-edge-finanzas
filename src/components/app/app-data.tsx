@@ -9,6 +9,8 @@ import { PlannedForm, type PlannedInitial } from "./forms/planned-form";
 import { EventForm, type EventInitial } from "./forms/event-form";
 import { AccountForm, type AccountInitial } from "./forms/account-form";
 import { LoanForm, type LoanInitial } from "./forms/loan-form";
+import { ObligationForm, type ObligationInitial } from "./forms/obligation-form";
+import { PaymentForm, type PaymentInitial } from "./forms/payment-form";
 
 export type AccountOption = Pick<
   Tables<"accounts">,
@@ -26,6 +28,8 @@ type Sheet =
   | { type: "event"; initial: EventInitial }
   | { type: "account"; initial: AccountInitial }
   | { type: "loan"; initial: LoanInitial }
+  | { type: "obligation"; initial: ObligationInitial }
+  | { type: "payment"; initial: PaymentInitial }
   | null;
 
 interface Ctx {
@@ -39,6 +43,8 @@ interface Ctx {
   openEvent: (initial?: EventInitial) => void;
   openAccount: (initial?: AccountInitial) => void;
   openLoan: (initial?: LoanInitial) => void;
+  openObligation: (initial?: ObligationInitial) => void;
+  openPayment: (initial: PaymentInitial) => void;
 }
 
 const AppDataContext = createContext<Ctx | null>(null);
@@ -83,6 +89,8 @@ export function AppDataProvider({
       openEvent: (initial = {}) => setSheet({ type: "event", initial }),
       openAccount: (initial = {}) => setSheet({ type: "account", initial }),
       openLoan: (initial = {}) => setSheet({ type: "loan", initial }),
+      openObligation: (initial = {}) => setSheet({ type: "obligation", initial }),
+      openPayment: (initial) => setSheet({ type: "payment", initial }),
     }),
     [accounts, planned, categories, today, currency],
   );
@@ -109,6 +117,8 @@ export function AppDataProvider({
         ? "Nueva tarjeta"
         : "Nueva cuenta";
   if (sheet?.type === "loan") title = "Registrar préstamo";
+  if (sheet?.type === "obligation") title = sheet.initial.id ? "Editar obligación" : "Nueva obligación";
+  if (sheet?.type === "payment") title = `Pago · ${sheet.initial.label}`;
 
   return (
     <AppDataContext.Provider value={value}>
@@ -128,6 +138,8 @@ export function AppDataProvider({
         {sheet?.type === "event" && <EventForm initial={sheet.initial} onDone={close} />}
         {sheet?.type === "account" && <AccountForm initial={sheet.initial} onDone={close} />}
         {sheet?.type === "loan" && <LoanForm initial={sheet.initial} onDone={close} />}
+        {sheet?.type === "obligation" && <ObligationForm initial={sheet.initial} onDone={close} />}
+        {sheet?.type === "payment" && <PaymentForm initial={sheet.initial} onDone={close} />}
       </Modal>
     </AppDataContext.Provider>
   );
