@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { ArrowLeftRight, Download } from "lucide-react";
 import { NewTransactionButton } from "@/components/app/open-buttons";
-import { Card, EmptyState, Money, PageHeader } from "@/components/ui/misc";
+import { Card, EmptyState, PageHeader } from "@/components/ui/misc";
+import { StatTile, TileGrid } from "@/components/ui/tiles";
 import { getAccounts, getCategories, getContext, getMonthTotals, getRates, monthRange } from "@/lib/data";
 import { isValidMonth } from "@/lib/dates";
 import { TransactionFilters } from "./filters";
@@ -92,19 +93,11 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
         values={{ tipo: sp.tipo ?? "", cuenta: sp.cuenta ?? "", categoria: sp.categoria ?? "", q: sp.q ?? "" }}
       />
 
-      <Card className="mb-4 grid grid-cols-3 divide-x divide-line">
-        {[
-          { l: "Ingresos", v: totals.income, c: "text-positive" },
-          { l: "Gastos", v: totals.expense, c: "text-ink" },
-          { l: "Neto", v: totals.savings, c: totals.savings < 0 ? "text-negative" : "text-ink" },
-        ].map((k) => (
-          <div key={k.l} className="min-w-0 px-3 py-2.5 sm:px-5 sm:py-3">
-            <p className="text-[11px] font-semibold text-muted sm:text-xs">{k.l}</p>
-            <Money value={k.v} currency={currency} compact className={`text-[15px] font-bold sm:hidden ${k.c}`} />
-            <Money value={k.v} currency={currency} className={`hidden text-lg font-bold sm:inline ${k.c}`} />
-          </div>
-        ))}
-      </Card>
+      <TileGrid cols={3} className="mb-4">
+        <StatTile label="Ingresos" value={totals.income} currency={currency} tone="positive" href={`/movimientos?mes=${month}&tipo=income`} />
+        <StatTile label="Gastos" value={totals.expense} currency={currency} href={`/movimientos?mes=${month}&tipo=expense`} />
+        <StatTile label="Neto" value={totals.savings} currency={currency} signed href={`/movimientos?mes=${month}`} />
+      </TileGrid>
 
       <Card>
         {rows.length ? (

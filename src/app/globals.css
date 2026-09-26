@@ -2,12 +2,12 @@
 
 /* ================================================================
    Data Edge · Design System
-   Azul profundo + turquesa + blanco. Tipografía: Fraunces (títulos)
-   y Manrope (interfaz y cifras).
+   Azul profundo + turquesa + blanco, en tonos suaves (pastel).
+   Tipografía única: Manrope, escala compacta y jerarquía por peso.
    ================================================================ */
 @theme {
   --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+  --font-display: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
 
   --color-navy-950: #051226;
   --color-navy-900: #0a1f3c;
@@ -24,20 +24,25 @@
   --color-teal-700: #0b7f71;
   --color-teal-50: #ebfbf8;
 
-  --color-canvas: #f4f6fa;
+  --color-canvas: #f5f7fa;
   --color-surface: #ffffff;
-  --color-line: #e3e8ef;
-  --color-line-strong: #cfd7e3;
-  --color-ink: #0b1628;
-  --color-ink-2: #3b4a60;
-  --color-muted: #66758b;
+  --color-line: #e8ecf2;
+  --color-line-strong: #d9e0ea;
+  --color-ink: #1e2a3b;
+  --color-ink-2: #465467;
+  --color-muted: #7b879a;
 
-  --color-positive: #0e9f6e;
-  --color-positive-50: #e8f7f1;
-  --color-negative: #d64545;
-  --color-negative-50: #fdeeee;
-  --color-warning: #b87503;
-  --color-warning-50: #fdf4e3;
+  /* Pastel derivados de la paleta activa (se recalculan por tema, ver abajo) */
+  --color-tint: #eef8f7;
+  --color-tint-2: #f1f4f9;
+  --color-tint-strong: #d7f0ec;
+
+  --color-positive: #2a9a78;
+  --color-positive-50: #eaf6f1;
+  --color-negative: #cf5f5a;
+  --color-negative-50: #fcf0ef;
+  --color-warning: #b9832b;
+  --color-warning-50: #fcf5e8;
 
   /* Series de gráficos (validadas para daltonismo, por paleta) */
   --color-series-in: #0e9f8c;
@@ -45,9 +50,10 @@
   --color-out-ink: #b4482c;
   --color-event: #8b5cf6;
 
-  --radius-card: 1.25rem;
-  --shadow-card: 0 1px 2px rgb(11 22 40 / 0.04), 0 8px 24px -12px rgb(11 22 40 / 0.12);
-  --shadow-pop: 0 20px 50px -20px rgb(5 18 38 / 0.45);
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(30 42 59 / 0.03), 0 4px 16px -10px rgb(30 42 59 / 0.08);
+  --shadow-hover: 0 2px 4px rgb(30 42 59 / 0.03), 0 12px 28px -14px rgb(30 42 59 / 0.18);
+  --shadow-pop: 0 20px 50px -20px rgb(30 42 59 / 0.3);
 
   --animate-fade-up: fade-up 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-scale-in: scale-in 0.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -162,6 +168,16 @@
   --color-event: #8b5cf6;
 }
 
+/* Tonos pastel derivados de la paleta activa: se declaran también en [data-theme]
+   para que cada tema recalcule sus propios tonos. */
+:root,
+[data-theme] {
+  --color-tint: color-mix(in oklab, var(--color-teal-500) 8%, white);
+  --color-tint-2: color-mix(in oklab, var(--color-navy-500) 6%, white);
+  --color-tint-strong: color-mix(in oklab, var(--color-teal-500) 18%, white);
+  --color-canvas: color-mix(in oklab, var(--color-navy-500) 4%, #f7f8fa);
+}
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
@@ -170,6 +186,8 @@
     background: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.5;
     font-feature-settings: "tnum" 0;
     -webkit-font-smoothing: antialiased;
   }
@@ -188,10 +206,10 @@
   letter-spacing: -0.01em;
 }
 
+/* Títulos: misma familia que la interfaz, más limpia; la jerarquía la da el peso. */
 @utility font-display {
-  font-family: var(--font-display);
-  font-optical-sizing: auto;
-  letter-spacing: -0.02em;
+  font-family: var(--font-sans);
+  letter-spacing: -0.015em;
 }
 
 @utility card {
@@ -200,6 +218,20 @@
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
+}
+
+/* Tarjeta clicable: se eleva y toma el tono de marca al pasar el cursor. */
+@utility card-link {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+  cursor: pointer;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--color-tint-strong);
+  }
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 @utility skeleton {

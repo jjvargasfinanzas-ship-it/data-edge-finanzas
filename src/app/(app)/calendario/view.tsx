@@ -173,7 +173,7 @@ export function CalendarView({
             <button type="button" onClick={() => shift(-1)} className="grid size-9 place-items-center rounded-lg text-muted hover:bg-canvas hover:text-ink" aria-label="Anterior">
               <ChevronLeft className="size-5" />
             </button>
-            <h2 className="min-w-44 text-center text-[15px] font-bold text-ink">{title}</h2>
+            <h2 className="min-w-44 text-center text-sm font-semibold text-ink">{title}</h2>
             <button type="button" onClick={() => shift(1)} className="grid size-9 place-items-center rounded-lg text-muted hover:bg-canvas hover:text-ink" aria-label="Siguiente">
               <ChevronRight className="size-5" />
             </button>
@@ -199,7 +199,7 @@ export function CalendarView({
           <div role="grid" aria-label={title}>
             <div className="grid grid-cols-7 border-b border-line bg-canvas/60" role="row">
               {WEEKDAYS.map((w) => (
-                <div key={w} role="columnheader" className="py-2 text-center text-[11px] font-bold tracking-wide text-muted uppercase">
+                <div key={w} role="columnheader" className="py-2 text-center text-[11px] font-semibold tracking-wide text-muted uppercase">
                   {w}
                 </div>
               ))}
@@ -228,8 +228,8 @@ export function CalendarView({
                     <span className="flex items-center justify-between">
                       <span
                         className={cn(
-                          "grid size-6 place-items-center rounded-full text-xs font-bold",
-                          d === today ? "bg-navy-900 text-white" : inMonth ? "text-ink" : "text-muted/60",
+                          "grid size-6 place-items-center rounded-full text-xs font-semibold",
+                          d === today ? "bg-teal-500 text-navy-950" : inMonth ? "text-ink" : "text-muted/60",
                         )}
                       >
                         {Number(d.slice(8))}
@@ -240,8 +240,8 @@ export function CalendarView({
                         ))}
                       </span>
                     </span>
-                    {inc > 0 && <span className="num hidden truncate text-[11px] font-bold text-positive sm:block">+{formatMoney(inc, currency, { compact: true })}</span>}
-                    {out > 0 && <span className="num hidden truncate text-[11px] font-bold text-out-ink sm:block">−{formatMoney(out, currency, { compact: true })}</span>}
+                    {inc > 0 && <span className="num hidden truncate text-[11px] font-semibold text-positive sm:block">+{formatMoney(inc, currency, { compact: true })}</span>}
+                    {out > 0 && <span className="num hidden truncate text-[11px] font-semibold text-out-ink sm:block">−{formatMoney(out, currency, { compact: true })}</span>}
                     <span className="hidden flex-col gap-0.5 sm:flex">
                       {list
                         .filter((i) => i.baseAmount === undefined)
@@ -272,8 +272,8 @@ export function CalendarView({
               return (
                 <div key={d} className={cn("min-h-40 p-2", d === today && "bg-teal-50/60", d === selected && "ring-2 ring-teal-500 ring-inset")}>
                   <button type="button" onClick={() => selectDay(d)} className="mb-2 flex w-full items-baseline justify-between">
-                    <span className="text-xs font-bold text-muted uppercase">{formatWeekdayShort(d)}</span>
-                    <span className={cn("text-lg font-bold", d === today ? "text-teal-700" : "text-ink")}>{Number(d.slice(8))}</span>
+                    <span className="text-xs font-semibold text-muted uppercase">{formatWeekdayShort(d)}</span>
+                    <span className={cn("text-lg font-semibold", d === today ? "text-teal-700" : "text-ink")}>{Number(d.slice(8))}</span>
                   </button>
                   <ul className="space-y-1.5">
                     {list.map((i) => (
@@ -289,7 +289,7 @@ export function CalendarView({
                     ))}
                   </ul>
                   {balances[d] !== undefined && d >= today && (
-                    <p className={cn("num mt-2 text-right text-[11px] font-bold", balances[d] < 0 ? "text-negative" : "text-teal-700")}>
+                    <p className={cn("num mt-2 text-right text-[11px] font-semibold", balances[d] < 0 ? "text-negative" : "text-teal-700")}>
                       Saldo {formatMoney(balances[d], currency, { compact: true })}
                     </p>
                   )}
@@ -305,10 +305,10 @@ export function CalendarView({
               .filter((d) => d.slice(0, 7) === month && (byDate.get(d)?.length ?? 0) > 0)
               .map((d) => (
                 <li key={d}>
-                  <button type="button" onClick={() => selectDay(d)} className="flex w-full gap-4 px-5 py-4 text-left hover:bg-canvas/60">
+                  <button type="button" onClick={() => selectDay(d)} className="flex w-full gap-4 px-5 py-4 text-left hover:bg-tint/70">
                     <div className="w-12 shrink-0 text-center">
-                      <p className="text-[11px] font-bold text-muted uppercase">{formatWeekdayShort(d)}</p>
-                      <p className={cn("text-xl font-bold", d === today ? "text-teal-700" : "text-ink")}>{Number(d.slice(8))}</p>
+                      <p className="text-[11px] font-semibold text-muted uppercase">{formatWeekdayShort(d)}</p>
+                      <p className={cn("text-xl font-semibold", d === today ? "text-teal-700" : "text-ink")}>{Number(d.slice(8))}</p>
                     </div>
                     <ul className="min-w-0 flex-1 space-y-1">
                       {(byDate.get(d) ?? []).map((i) => (
@@ -381,9 +381,9 @@ function DayDetail({
     rows.length ? (
       <section className="py-3">
         <div className="mb-1 flex items-baseline justify-between">
-          <h3 className="text-[11px] font-bold tracking-[0.12em] text-muted uppercase">{title}</h3>
+          <h3 className="text-[11px] font-semibold tracking-[0.12em] text-muted uppercase">{title}</h3>
           {total !== undefined && total > 0 && (
-            <span className={cn("num text-sm font-bold", tone === "in" ? "text-positive" : "text-ink")}>
+            <span className={cn("num text-sm font-semibold", tone === "in" ? "text-positive" : "text-ink")}>
               {tone === "in" ? "+" : "−"}
               {formatMoney(total, currency)}
             </span>
@@ -402,8 +402,8 @@ function DayDetail({
   return (
     <div>
       <div className="hidden border-b border-line px-5 py-4 xl:block">
-        <p className="text-xs font-bold tracking-wide text-muted uppercase">{date === today ? "Hoy" : "Día seleccionado"}</p>
-        <p className="text-[15px] font-bold text-ink first-letter:uppercase">{formatLong(date)}</p>
+        <p className="text-xs font-semibold tracking-wide text-muted uppercase">{date === today ? "Hoy" : "Día seleccionado"}</p>
+        <p className="text-sm font-semibold text-ink first-letter:uppercase">{formatLong(date)}</p>
       </div>
       <div className="divide-y divide-line px-0 xl:px-5">
         {list.length ? (
@@ -418,20 +418,20 @@ function DayDetail({
         )}
       </div>
       {balance !== undefined && date >= today && (
-        <div className="mx-0 mt-1 flex items-center justify-between rounded-xl bg-navy-950 px-4 py-3 text-white xl:mx-5">
-          <span className="text-sm font-semibold text-white/70">Saldo esperado al cierre</span>
-          <span className={cn("num text-lg font-bold", balance < 0 ? "text-[#ff9b86]" : "text-teal-300")}>{formatMoney(balance, currency)}</span>
+        <div className="mx-0 mt-1 flex items-center justify-between rounded-xl bg-tint px-4 py-3 xl:mx-5">
+          <span className="text-sm font-medium text-ink-2">Saldo esperado al cierre</span>
+          <span className={cn("num text-base font-semibold", balance < 0 ? "text-negative" : "text-teal-700")}>{formatMoney(balance, currency)}</span>
         </div>
       )}
       <div className="flex flex-wrap gap-2 px-0 py-4 xl:px-5">
-        <button type="button" onClick={onNewPlanned} className="inline-flex items-center gap-1.5 rounded-lg bg-canvas px-3 py-2 text-xs font-bold text-ink hover:bg-line">
+        <button type="button" onClick={onNewPlanned} className="inline-flex items-center gap-1.5 rounded-lg bg-canvas px-3 py-2 text-xs font-semibold text-ink hover:bg-line">
           <Plus className="size-3.5" /> Programar
         </button>
-        <button type="button" onClick={onNewEvent} className="inline-flex items-center gap-1.5 rounded-lg bg-canvas px-3 py-2 text-xs font-bold text-ink hover:bg-line">
+        <button type="button" onClick={onNewEvent} className="inline-flex items-center gap-1.5 rounded-lg bg-canvas px-3 py-2 text-xs font-semibold text-ink hover:bg-line">
           <CalendarPlus className="size-3.5" /> Evento
         </button>
         {date <= today && (
-          <button type="button" onClick={onNewExpense} className="inline-flex items-center gap-1.5 rounded-lg bg-canvas px-3 py-2 text-xs font-bold text-ink hover:bg-line">
+          <button type="button" onClick={onNewExpense} className="inline-flex items-center gap-1.5 rounded-lg bg-canvas px-3 py-2 text-xs font-semibold text-ink hover:bg-line">
             <Plus className="size-3.5" /> Gasto
           </button>
         )}
@@ -462,7 +462,7 @@ function ItemRow({ item: i, onOpen }: { item: CalItem; onOpen: () => void }) {
         </span>
       </span>
       {i.amount !== undefined && (
-        <span className={cn("num shrink-0 text-sm font-bold", i.tone === "in" ? "text-positive" : "text-ink")}>
+        <span className={cn("num shrink-0 text-sm font-semibold", i.tone === "in" ? "text-positive" : "text-ink")}>
           {i.tone === "in" ? "+" : i.tone === "out" ? "−" : ""}
           {formatMoney(i.amount, i.currency)}
         </span>

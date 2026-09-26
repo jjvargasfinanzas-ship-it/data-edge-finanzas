@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { CreditCard, TriangleAlert } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, CreditCard, TriangleAlert } from "lucide-react";
 import { NewAccountButton } from "@/components/app/open-buttons";
 import { Card, EmptyState, PageHeader } from "@/components/ui/misc";
 import { cn } from "@/components/ui/cn";
@@ -67,47 +68,47 @@ export default async function TarjetasPage() {
 
             return (
               <Card key={c.id} className="overflow-hidden">
-                <div className="relative overflow-hidden bg-gradient-to-br from-navy-800 via-navy-900 to-navy-950 p-6 text-white">
-                  <div className="pointer-events-none absolute -top-16 -right-10 size-48 rounded-full bg-teal-500/25 blur-2xl" />
+                <Link href={`/cuentas/${c.id}`} className="group relative block overflow-hidden bg-gradient-to-br from-tint to-tint-2 p-5 transition-colors hover:from-tint-strong/70">
+                  <div className="pointer-events-none absolute -top-16 -right-10 size-44 rounded-full bg-surface/60 blur-2xl" />
                   <div className="relative flex items-start justify-between">
                     <div>
-                      <p className="text-xs font-semibold tracking-[0.16em] text-white/60 uppercase">{c.institution || "Tarjeta de crédito"}</p>
-                      <p className="mt-1 text-lg font-bold">{c.name}</p>
+                      <p className="text-xs font-medium text-muted">{c.institution || "Tarjeta de crédito"}</p>
+                      <p className="mt-0.5 text-base font-semibold text-ink">{c.name}</p>
                     </div>
-                    <CreditCard className="size-7 text-teal-300" />
+                    <span className="flex items-center gap-1 text-teal-700"><CreditCard className="size-5" /><ChevronRight className="size-4 transition group-hover:translate-x-0.5" /></span>
                   </div>
-                  <div className="relative mt-8 flex items-end justify-between gap-4">
+                  <div className="relative mt-6 flex items-end justify-between gap-4">
                     <div>
-                      <p className="text-xs text-white/60">Utilizado</p>
-                      <p className="num text-3xl font-bold">{formatMoney(used, c.currency)}</p>
+                      <p className="text-xs text-muted">Utilizado</p>
+                      <p className="num text-2xl font-semibold text-ink">{formatMoney(used, c.currency)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-white/60">Disponible</p>
-                      <p className="num text-lg font-bold text-teal-300">{formatMoney(available, c.currency)}</p>
+                      <p className="text-xs text-muted">Disponible</p>
+                      <p className="num text-base font-semibold text-teal-700">{formatMoney(available, c.currency)}</p>
                     </div>
                   </div>
-                  <div className="relative mt-4 h-2 overflow-hidden rounded-full bg-white/15">
+                  <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-surface/80">
                     <div
-                      className={cn("h-full rounded-full", pct >= 90 ? "bg-[#ff8f7a]" : pct >= 70 ? "bg-[#f5c451]" : "bg-teal-400")}
+                      className={cn("h-full rounded-full", pct >= 90 ? "bg-negative/70" : pct >= 70 ? "bg-warning/70" : "bg-teal-400")}
                       style={{ width: `${Math.min(100, pct)}%` }}
                     />
                   </div>
-                  <p className="relative mt-1.5 text-xs text-white/60">
+                  <p className="relative mt-1.5 text-xs text-muted">
                     {formatPct(pct, { digits: 0 })} de {formatMoney(limit, c.currency)}
                   </p>
-                </div>
+                </Link>
                 <dl className="grid grid-cols-3 divide-x divide-line border-b border-line text-center">
                   <div className="p-4">
                     <dt className="text-xs font-semibold text-muted">Próximo corte</dt>
-                    <dd className="mt-0.5 text-sm font-bold text-ink">{formatShort(cut)}</dd>
+                    <dd className="mt-0.5 text-sm font-semibold text-ink">{formatShort(cut)}</dd>
                   </div>
                   <div className="p-4">
                     <dt className="text-xs font-semibold text-muted">Fecha de pago</dt>
-                    <dd className={cn("mt-0.5 text-sm font-bold", used > 0 && dueIn <= 3 ? "text-warning" : "text-ink")}>{formatShort(due)}</dd>
+                    <dd className={cn("mt-0.5 text-sm font-semibold", used > 0 && dueIn <= 3 ? "text-warning" : "text-ink")}>{formatShort(due)}</dd>
                   </div>
                   <div className="p-4">
                     <dt className="text-xs font-semibold text-muted">Compras del periodo</dt>
-                    <dd className="num mt-0.5 text-sm font-bold text-ink">{formatMoney(periodSpend, c.currency, { compact: periodSpend >= 1e7 })}</dd>
+                    <dd className="num mt-0.5 text-sm font-semibold text-ink">{formatMoney(periodSpend, c.currency, { compact: periodSpend >= 1e7 })}</dd>
                   </div>
                 </dl>
                 {alerts.length > 0 && (

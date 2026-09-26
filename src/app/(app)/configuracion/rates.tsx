@@ -39,10 +39,10 @@ export function RatesManager({ rates, today }: { rates: Rate[]; today: string })
           const r = latest.get(c);
           return (
             <li key={c} className="rounded-xl bg-canvas px-3 py-2.5">
-              <p className="flex items-center justify-between text-xs font-bold text-muted">
+              <p className="flex items-center justify-between text-xs font-semibold text-muted">
                 1 {c} {r?.user_id && <Badge tone="brand">Manual</Badge>}
               </p>
-              <p className="num text-[15px] font-bold text-ink">{r ? formatMoney(r.rate, "COP") : "Sin tasa"}</p>
+              <p className="num text-sm font-semibold text-ink">{r ? formatMoney(r.rate, "COP") : "Sin tasa"}</p>
               {r && <p className="text-[11px] text-muted">{formatMedium(r.rate_date)}</p>}
             </li>
           );

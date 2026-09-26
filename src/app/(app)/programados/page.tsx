@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarClock } from "lucide-react";
 import { NewPlannedButton } from "@/components/app/open-buttons";
 import { Card, EmptyState, Money, PageHeader } from "@/components/ui/misc";
+import { StatTile, TileGrid } from "@/components/ui/tiles";
 import { cn } from "@/components/ui/cn";
 import { getAccounts, getCategories, getContext, getPeriodPlan, getPlanned, getRates } from "@/lib/data";
 import { endOfMonth, formatMonth, startOfMonth } from "@/lib/dates";
@@ -85,19 +86,11 @@ export default async function ProgramadosPage({ searchParams }: { searchParams: 
         }
       />
 
-      <Card className="mb-4 grid grid-cols-3 divide-x divide-line">
-        {[
-          { l: "Ingresos fijos/mes", v: fixedIn, c: "text-positive" },
-          { l: "Gastos fijos/mes", v: fixedOut, c: "text-ink" },
-          { l: "Margen", v: fixedIn - fixedOut, c: fixedIn - fixedOut < 0 ? "text-negative" : "text-ink" },
-        ].map((k) => (
-          <div key={k.l} className="min-w-0 px-3 py-2.5 sm:px-5 sm:py-3">
-            <p className="truncate text-[11px] font-semibold text-muted sm:text-xs">{k.l}</p>
-            <Money value={k.v} currency={currency} compact className={`text-[15px] font-bold sm:hidden ${k.c}`} />
-            <Money value={k.v} currency={currency} className={`hidden text-lg font-bold sm:inline ${k.c}`} />
-          </div>
-        ))}
-      </Card>
+      <TileGrid cols={3} className="mb-4">
+        <StatTile label="Ingresos fijos/mes" value={fixedIn} currency={currency} tone="positive" href="/programados?tipo=ingresos" />
+        <StatTile label="Gastos fijos/mes" value={fixedOut} currency={currency} href="/programados?tipo=gastos" />
+        <StatTile label="Margen" value={fixedIn - fixedOut} currency={currency} signed href="/flujo-de-caja?v=proyectado" />
+      </TileGrid>
 
       <nav className="mb-4 flex w-fit rounded-xl bg-surface p-1 ring-1 ring-line" aria-label="Tipo">
         {(Object.keys(TABS) as (keyof typeof TABS)[]).map((k) => {
@@ -107,7 +100,7 @@ export default async function ProgramadosPage({ searchParams }: { searchParams: 
               key={k}
               href={`/programados?tipo=${k}`}
               aria-current={k === tab ? "true" : undefined}
-              className={cn("rounded-lg px-4 py-1.5 text-sm font-semibold", k === tab ? "bg-navy-900 text-white" : "text-muted hover:text-ink")}
+              className={cn("rounded-lg px-4 py-1.5 text-sm font-semibold", k === tab ? "bg-tint text-teal-700 shadow-sm" : "text-muted hover:text-ink")}
             >
               {TABS[k].label} <span className="ml-1 opacity-70">{n}</span>
             </Link>

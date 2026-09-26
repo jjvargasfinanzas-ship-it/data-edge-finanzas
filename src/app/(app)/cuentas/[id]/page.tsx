@@ -153,7 +153,7 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
               <p className="text-[13px] font-semibold text-muted">{receivable ? "Me debe" : payable ? "Debo" : isCard ? "Deuda actual" : "Saldo real hoy"}</p>
               <Badge tone="positive">Real</Badge>
             </div>
-            <p className={cn("num mt-1 text-3xl font-bold whitespace-nowrap", !isCard && !loan && acc.balance < 0 && "text-negative")}>
+            <p className={cn("num mt-1 text-2xl font-semibold whitespace-nowrap", !isCard && !loan && acc.balance < 0 && "text-negative")}>
               {money(loan ? loanPending : isCard ? Math.max(0, -acc.balance) : acc.balance)}
             </p>
             {loan ? (
@@ -176,7 +176,7 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
           </Card>
 
           <Card className="p-4 sm:p-5">
-            <h2 className="font-bold text-ink">¿De dónde sale este saldo?</h2>
+            <h2 className="font-semibold text-ink">¿De dónde sale este saldo?</h2>
             <StatRows rows={loan ? loanRows : composition} className="mt-1" />
             <p className="mt-2 text-xs text-muted">
               Solo cuenta movimientos con fecha hasta hoy. Si el saldo inicial no es correcto, corrígelo con <strong>Editar</strong> arriba.
@@ -185,7 +185,7 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
 
           <Card className="p-4 sm:p-5">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="font-bold text-ink">Programado en esta cuenta</h2>
+              <h2 className="font-semibold text-ink">Programado en esta cuenta</h2>
               <Badge tone="neutral">Estimado</Badge>
             </div>
             <p className="mt-0.5 text-xs text-muted">Próximos 60 días. Aún no afecta el saldo: confírmalo cuando ocurra, o edítalo/elimínalo.</p>
@@ -202,7 +202,7 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
 
         <Card>
           <div className="flex items-baseline justify-between gap-2 px-4 pt-4 pb-2 sm:px-5">
-            <h2 className="font-bold text-ink">Movimientos reales</h2>
+            <h2 className="font-semibold text-ink">Movimientos reales</h2>
             <span className="text-xs text-muted">Toca uno para corregirlo</span>
           </div>
           {moves.length ? (

@@ -17,7 +17,7 @@ function TooltipBox({ active, payload, currency }: { active?: boolean; payload?:
   return (
     <div className="rounded-xl border border-line bg-surface px-3 py-2.5 text-xs shadow-pop">
       <p className="font-semibold text-muted first-letter:uppercase">{formatLong(p.date)}</p>
-      <p className="num mt-1 text-sm font-bold text-ink">{formatMoney(p.closing, currency)}</p>
+      <p className="num mt-1 text-sm font-semibold text-ink">{formatMoney(p.closing, currency)}</p>
       {(p.inflow > 0 || p.outflow > 0) && (
         <div className="mt-1.5 space-y-0.5 border-t border-line pt-1.5">
           {p.inflow > 0 && (

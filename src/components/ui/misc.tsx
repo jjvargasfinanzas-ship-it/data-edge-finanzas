@@ -24,8 +24,8 @@ export function CardHeader({
   return (
     <div className={cn("flex items-start justify-between gap-3 px-5 pt-5", className)}>
       <div className="min-w-0">
-        <h2 className="text-[15px] font-bold text-ink">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-[13px] text-muted">{subtitle}</p>}
+        <h2 className="text-sm font-semibold text-ink">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -44,8 +44,8 @@ export function PageHeader({
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3 animate-fade-up sm:mb-6">
       <div className="min-w-0">
-        <h1 className="font-display text-2xl leading-tight font-semibold text-ink sm:text-[32px]">{title}</h1>
-        {subtitle && <p className="mt-0.5 text-[13px] text-muted sm:mt-1 sm:text-sm">{subtitle}</p>}
+        <h1 className="font-display text-xl leading-tight font-semibold text-ink sm:text-2xl">{title}</h1>
+        {subtitle && <p className="mt-0.5 text-xs text-muted sm:text-[13px]">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
@@ -54,19 +54,19 @@ export function PageHeader({
 
 type Tone = "neutral" | "positive" | "negative" | "warning" | "brand" | "dark";
 const tones: Record<Tone, string> = {
-  neutral: "bg-canvas text-ink-2 border-line",
-  positive: "bg-positive-50 text-positive border-positive/20",
-  negative: "bg-negative-50 text-negative border-negative/20",
-  warning: "bg-warning-50 text-warning border-warning/20",
-  brand: "bg-teal-50 text-teal-700 border-teal-500/20",
-  dark: "bg-navy-900 text-white border-navy-900",
+  neutral: "bg-tint-2 text-ink-2 border-transparent",
+  positive: "bg-positive-50 text-positive border-transparent",
+  negative: "bg-negative-50 text-negative border-transparent",
+  warning: "bg-warning-50 text-warning border-transparent",
+  brand: "bg-tint text-teal-700 border-transparent",
+  dark: "bg-navy-700/10 text-navy-700 border-transparent",
 };
 
 export function Badge({ tone = "neutral", className, children }: { tone?: Tone; className?: string; children: React.ReactNode }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
+        "inline-flex items-center gap-1 rounded-full border px-2 py-px text-[10.5px] font-semibold",
         tones[tone],
         className,
       )}
@@ -116,8 +116,8 @@ export function Delta({ value, goodWhen = "up", className }: { value: number | n
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold num",
-        good === null && "bg-canvas text-muted",
+        "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold num",
+        good === null && "bg-tint-2 text-muted",
         good === true && "bg-positive-50 text-positive",
         good === false && "bg-negative-50 text-negative",
         className,
@@ -133,7 +133,7 @@ export function Progress({ value, tone = "brand", className, label }: { value: n
   const pct = Math.max(0, Math.min(100, value));
   return (
     <div
-      className={cn("h-2 w-full overflow-hidden rounded-full bg-canvas", className)}
+      className={cn("h-1.5 w-full overflow-hidden rounded-full bg-tint-2", className)}
       role="progressbar"
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}
@@ -143,9 +143,9 @@ export function Progress({ value, tone = "brand", className, label }: { value: n
       <div
         className={cn(
           "h-full rounded-full transition-[width] duration-500",
-          tone === "brand" && "bg-teal-500",
-          tone === "warning" && "bg-warning",
-          tone === "negative" && "bg-negative",
+          tone === "brand" && "bg-teal-400",
+          tone === "warning" && "bg-warning/70",
+          tone === "negative" && "bg-negative/70",
         )}
         style={{ width: `${pct}%` }}
       />
@@ -168,8 +168,8 @@ export function EmptyState({
 }) {
   return (
     <div className={cn("flex flex-col items-center px-6 py-12 text-center", className)}>
-      {icon && <div className="mb-4 grid size-14 place-items-center rounded-2xl bg-teal-50 text-teal-600">{icon}</div>}
-      <p className="text-[15px] font-bold text-ink">{title}</p>
+      {icon && <div className="mb-4 grid size-12 place-items-center rounded-2xl bg-tint text-teal-600">{icon}</div>}
+      <p className="text-sm font-semibold text-ink">{title}</p>
       {description && <p className="mt-1 max-w-sm text-sm text-muted">{description}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>

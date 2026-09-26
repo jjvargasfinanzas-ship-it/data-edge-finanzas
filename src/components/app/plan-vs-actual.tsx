@@ -21,10 +21,10 @@ function Row({
   return (
     <div className="py-4 first:pt-0 last:pb-0">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-sm font-bold text-ink">{title}</p>
+        <p className="text-sm font-semibold text-ink">{title}</p>
         <p className="text-xs text-muted">
           {s.countDone} de {s.count} {verb}
-          {s.countOverdue > 0 && <span className="font-bold text-warning"> · {s.countOverdue} vencido{s.countOverdue > 1 ? "s" : ""}</span>}
+          {s.countOverdue > 0 && <span className="font-semibold text-warning"> · {s.countOverdue} vencido{s.countOverdue > 1 ? "s" : ""}</span>}
         </p>
       </div>
       <div
@@ -40,15 +40,15 @@ function Row({
       <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
         <div>
           <dt className="text-muted">Programado</dt>
-          <dd className="num text-sm font-bold text-ink">{formatMoney(s.planned, currency)}</dd>
+          <dd className="num text-sm font-semibold text-ink">{formatMoney(s.planned, currency)}</dd>
         </div>
         <div>
           <dt className="text-muted">{tone === "in" ? "Recibido" : "Pagado"}</dt>
-          <dd className="num text-sm font-bold text-ink">{formatMoney(s.received, currency)}</dd>
+          <dd className="num text-sm font-semibold text-ink">{formatMoney(s.received, currency)}</dd>
         </div>
         <div>
           <dt className="text-muted">Pendiente</dt>
-          <dd className={cn("num text-sm font-bold", s.pending > 0 ? (tone === "in" ? "text-positive" : "text-ink") : "text-muted")}>
+          <dd className={cn("num text-sm font-semibold", s.pending > 0 ? (tone === "in" ? "text-positive" : "text-ink") : "text-muted")}>
             {formatMoney(s.pending, currency)}
           </dd>
         </div>

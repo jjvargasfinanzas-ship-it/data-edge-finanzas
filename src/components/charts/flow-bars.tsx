@@ -21,7 +21,7 @@ function TooltipBox({ active, payload, currency }: { active?: boolean; payload?:
       <p className="num flex items-center gap-1.5 text-ink">
         <span className="size-2 rounded-full bg-series-out" /> Salidas {formatMoney(p.outflow, currency)}
       </p>
-      <p className="num mt-1 border-t border-line pt-1 font-bold text-ink">Neto {formatMoney(p.inflow - p.outflow, currency, { signed: true })}</p>
+      <p className="num mt-1 border-t border-line pt-1 font-semibold text-ink">Neto {formatMoney(p.inflow - p.outflow, currency, { signed: true })}</p>
     </div>
   );
 }

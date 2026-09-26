@@ -48,7 +48,7 @@ export function TransactionFilters({
         <button type="button" onClick={() => shift(-1)} className="grid size-10 place-items-center text-muted hover:text-ink" aria-label="Mes anterior">
           <ChevronLeft className="size-4" />
         </button>
-        <span className="min-w-24 text-center text-sm font-bold text-ink sm:min-w-36">{formatMonth(month)}</span>
+        <span className="min-w-24 text-center text-sm font-semibold text-ink sm:min-w-36">{formatMonth(month)}</span>
         <button type="button" onClick={() => shift(1)} className="grid size-10 place-items-center text-muted hover:text-ink" aria-label="Mes siguiente">
           <ChevronRight className="size-4" />
         </button>
@@ -68,7 +68,7 @@ export function TransactionFilters({
         aria-label="Filtros"
       >
         <SlidersHorizontal className="size-4" />
-        {active > 0 && <span className="absolute -top-1 -right-1 grid size-4 place-items-center rounded-full bg-teal-600 text-[10px] font-bold text-white">{active}</span>}
+        {active > 0 && <span className="absolute -top-1 -right-1 grid size-4 place-items-center rounded-full bg-teal-600 text-[10px] font-semibold text-white">{active}</span>}
       </button>
     </div>
     <div className={cn("grid grid-cols-1 gap-2 sm:flex sm:flex-wrap", !open && "hidden sm:flex")}>

@@ -24,11 +24,11 @@ function NavLink({ item, path, locked, onNavigate }: { item: NavItem; path: stri
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] font-semibold transition-colors",
-        active ? "bg-white/10 text-white" : locked ? "text-white/40 hover:text-white/70" : "text-white/70 hover:bg-white/5 hover:text-white",
+        "group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition-colors",
+        active ? "bg-tint font-semibold text-teal-700" : locked ? "text-muted/70 hover:text-ink-2" : "text-ink-2 hover:bg-tint-2 hover:text-ink",
       )}
     >
-      <I className={cn("size-[18px] shrink-0", active && "text-teal-300")} strokeWidth={2.1} />
+      <I className={cn("size-4 shrink-0", active ? "text-teal-600" : "text-muted")} strokeWidth={2.1} />
       <span className="flex-1 truncate">{item.label}</span>
       {locked && <Lock className="size-3.5 opacity-60" aria-label="Próximamente" />}
     </Link>
@@ -41,7 +41,7 @@ function SidebarContent({ path, name, onNavigate }: { path: string; name: string
     <div className="flex h-full flex-col">
       <div className="px-5 pt-6 pb-5">
         <Link href="/inicio" onClick={onNavigate}>
-          <Logo tone="light" />
+          <Logo />
         </Link>
       </div>
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4" aria-label="Principal">
@@ -51,7 +51,7 @@ function SidebarContent({ path, name, onNavigate }: { path: string; name: string
           ))}
         </div>
         <div>
-          <p className="px-3 pb-2 text-[10px] font-bold tracking-[0.18em] text-white/35 uppercase">Próximos bloques</p>
+          <p className="px-3 pb-2 text-[10px] font-semibold tracking-[0.14em] text-muted/80 uppercase">Próximos bloques</p>
           <div className="space-y-0.5">
             {UPCOMING_NAV.map((i) => (
               <NavLink key={i.href} item={i} path={path} locked onNavigate={onNavigate} />
@@ -59,22 +59,22 @@ function SidebarContent({ path, name, onNavigate }: { path: string; name: string
           </div>
         </div>
       </nav>
-      <div className="space-y-0.5 border-t border-white/10 px-3 py-3">
+      <div className="space-y-0.5 border-t border-line px-3 py-3">
         <a
           href={dataEdgeUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-semibold text-teal-300 hover:bg-white/5"
+          className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium text-teal-700 hover:bg-tint"
         >
           <ExternalLink className="size-4" /> Más herramientas de Data Edge
         </a>
         <NavLink item={{ href: "/configuracion", label: "Configuración", icon: Settings }} path={path} onNavigate={onNavigate} />
         <form action={signOut}>
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-[14px] font-semibold text-white/60 hover:bg-white/5 hover:text-white">
-            <LogOut className="size-[18px]" /> Cerrar sesión
+          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium text-ink-2 hover:bg-tint-2 hover:text-ink">
+            <LogOut className="size-4 text-muted" /> Cerrar sesión
           </button>
         </form>
-        <p className="truncate px-3 pt-2 text-xs text-white/35">{name}</p>
+        <p className="truncate px-3 pt-2 text-xs text-muted">{name}</p>
       </div>
     </div>
   );
@@ -118,8 +118,8 @@ function QuickActions({ className, compact }: { className?: string; compact?: bo
         aria-haspopup="menu"
         aria-label="Acción rápida"
         className={cn(
-          "grid place-items-center rounded-2xl bg-teal-500 text-navy-950 shadow-[0_10px_30px_-8px_rgb(20_191_168/0.8)] transition-transform hover:bg-teal-400 active:scale-95",
-          compact ? "size-14" : "h-11 grid-flow-col gap-2 px-4 text-sm font-bold",
+          "grid place-items-center rounded-2xl bg-teal-500 text-navy-950 shadow-[0_8px_20px_-10px_rgb(30_42_59/0.35)] transition-transform hover:bg-teal-400 active:scale-95",
+          compact ? "size-13" : "h-10 grid-flow-col gap-2 px-4 text-sm font-semibold",
         )}
       >
         <Plus className={cn("transition-transform duration-200", open && "rotate-45", compact ? "size-6" : "size-5")} strokeWidth={2.6} />
@@ -191,9 +191,9 @@ export function AppShell({
   ];
 
   return (
-    <div className="min-h-dvh lg:pl-[264px]" data-theme={theme !== "data-edge" ? theme : undefined}>
+    <div className="min-h-dvh bg-canvas lg:pl-[248px]" data-theme={theme !== "data-edge" ? theme : undefined}>
       {/* Sidebar escritorio */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] bg-navy-950 lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] border-r border-line bg-surface lg:block">
         <SidebarContent path={path} name={name} />
       </aside>
 
@@ -215,12 +215,12 @@ export function AppShell({
       {/* Menú lateral móvil */}
       {drawer && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-navy-950/50" onClick={() => setDrawer(false)} />
-          <div className="absolute inset-y-0 right-0 w-[290px] bg-navy-950 shadow-pop animate-[fade-up_0.2s_both]">
+          <div className="absolute inset-0 bg-navy-950/25 backdrop-blur-[2px]" onClick={() => setDrawer(false)} />
+          <div className="absolute inset-y-0 right-0 w-[280px] bg-surface shadow-pop animate-[fade-up_0.2s_both]">
             <button
               type="button"
               onClick={() => setDrawer(false)}
-              className="absolute top-5 right-4 grid size-9 place-items-center rounded-full text-white/70 hover:bg-white/10"
+              className="absolute top-5 right-4 grid size-9 place-items-center rounded-full text-muted hover:bg-tint-2"
               aria-label="Cerrar menú"
             >
               <X className="size-5" />
@@ -231,8 +231,8 @@ export function AppShell({
       )}
 
       {/* Barra superior escritorio */}
-      <header className="sticky top-0 z-20 hidden h-16 items-center justify-between border-b border-line bg-canvas/85 px-10 backdrop-blur lg:flex">
-        <p className="text-sm font-semibold text-muted first-letter:uppercase">{todayLabel}</p>
+      <header className="sticky top-0 z-20 hidden h-14 items-center justify-between border-b border-line bg-canvas/85 px-10 backdrop-blur lg:flex">
+        <p className="text-xs font-medium text-muted first-letter:uppercase">{todayLabel}</p>
         <QuickActions />
       </header>
 
@@ -255,7 +255,7 @@ export function AppShell({
                 href={b.href}
                 aria-current={isActive(path, b.href) ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold",
+                  "flex flex-col items-center gap-1 py-2.5 text-[10.5px] font-medium",
                   isActive(path, b.href) ? "text-teal-700" : "text-muted",
                 )}
               >

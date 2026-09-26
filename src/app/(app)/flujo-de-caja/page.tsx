@@ -40,10 +40,10 @@ export default async function FlujoPage({ searchParams }: { searchParams: Promis
             key={t.k}
             href={`/flujo-de-caja?v=${t.k}`}
             aria-current={view === t.k ? "page" : undefined}
-            className={cn("rounded-lg px-3 py-2 text-center text-sm font-bold", view === t.k ? "bg-navy-900 text-white" : "text-muted hover:text-ink")}
+            className={cn("rounded-lg px-3 py-2 text-center text-sm font-semibold", view === t.k ? "bg-tint text-teal-700 shadow-sm" : "text-muted hover:text-ink")}
           >
             {t.label}
-            <span className={cn("block text-[11px] font-semibold", view === t.k ? "text-white/60" : "text-muted/80")}>{t.hint}</span>
+            <span className={cn("block text-[11px] font-semibold", view === t.k ? "text-teal-700/70" : "text-muted/80")}>{t.hint}</span>
           </Link>
         ))}
       </nav>
@@ -114,7 +114,7 @@ async function RealView({ month, today, currency }: { month: string; today: stri
         <Link href={`/flujo-de-caja?v=real&mes=${prev}`} className="grid size-10 place-items-center text-muted hover:text-ink" aria-label="Mes anterior">
           <ChevronLeft className="size-4" />
         </Link>
-        <span className="min-w-36 text-center text-sm font-bold text-ink">{formatMonth(month)}</span>
+        <span className="min-w-36 text-center text-sm font-semibold text-ink">{formatMonth(month)}</span>
         {isCurrent ? (
           <span className="size-10" />
         ) : (
@@ -184,7 +184,7 @@ async function ProjectedView({ h, today, currency }: { h: string; today: string;
             key={k}
             href={`/flujo-de-caja?v=proyectado&h=${k}`}
             aria-current={k === horizon ? "true" : undefined}
-            className={cn("rounded-lg px-3 py-1.5 text-sm font-semibold", k === horizon ? "bg-navy-900 text-white" : "text-muted hover:text-ink")}
+            className={cn("rounded-lg px-3 py-1.5 text-sm font-semibold", k === horizon ? "bg-tint text-teal-700 shadow-sm" : "text-muted hover:text-ink")}
           >
             {label}
           </Link>
@@ -248,7 +248,7 @@ async function ProjectedView({ h, today, currency }: { h: string; today: string;
                     {d.inflow > 0 && <span className="text-positive">+{formatMoney(d.inflow, currency)} </span>}
                     {d.outflow > 0 && <span>−{formatMoney(d.outflow, currency)}</span>}
                   </span>
-                  <span className={cn("num block font-bold", d.closing < 0 ? "text-negative" : "text-ink")}>{formatMoney(d.closing, currency)}</span>
+                  <span className={cn("num block font-semibold", d.closing < 0 ? "text-negative" : "text-ink")}>{formatMoney(d.closing, currency)}</span>
                 </span>
               </li>
             ))}

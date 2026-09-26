@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ChevronRight, HandCoins } from "lucide-react";
 import { LoanPaymentButton, NewLoanButton } from "@/components/app/open-buttons";
 import { Badge, Card, EmptyState, PageHeader, Progress } from "@/components/ui/misc";
+import { StatTile, TileGrid } from "@/components/ui/tiles";
 import { AccountIcon } from "@/components/ui/icons";
 import { cn } from "@/components/ui/cn";
 import { getAccounts, getCashflow, getContext, getRates } from "@/lib/data";
@@ -82,22 +83,16 @@ export default async function PrestamosPage() {
         </Card>
       ) : (
         <>
-          <Card className="mb-4 grid grid-cols-2 divide-x divide-line">
-            <div className="min-w-0 px-4 py-3 sm:px-5">
-              <p className="text-xs font-semibold text-muted">Me deben</p>
-              <p className="num text-lg font-bold text-positive">{formatMoney(owedToMe, currency)}</p>
-            </div>
-            <div className="min-w-0 px-4 py-3 sm:px-5">
-              <p className="text-xs font-semibold text-muted">Debo</p>
-              <p className="num text-lg font-bold text-ink">{formatMoney(iOwe, currency)}</p>
-            </div>
-          </Card>
+          <TileGrid cols={2} className="mb-4">
+            <StatTile label="Me deben" value={owedToMe} currency={currency} tone="positive" />
+            <StatTile label="Debo" value={iOwe} currency={currency} />
+          </TileGrid>
 
           <div className="space-y-4">
             {groups.map((g) =>
               g.items.length ? (
                 <section key={g.title}>
-                  <h2 className="mb-2 px-1 text-xs font-bold tracking-[0.14em] text-muted uppercase">
+                  <h2 className="mb-2 px-1 text-xs font-semibold tracking-[0.14em] text-muted uppercase">
                     {g.title} <span className="font-semibold tracking-normal normal-case">· {g.hint}</span>
                   </h2>
                   <Card>
@@ -110,7 +105,7 @@ export default async function PrestamosPage() {
                             <div className="flex items-center gap-3">
                               <AccountIcon type={r.l.type} className="size-9" />
                               <Link href={`/cuentas/${r.l.id}`} className="min-w-0 flex-1">
-                                <span className="flex items-center gap-2 text-sm font-bold text-ink">
+                                <span className="flex items-center gap-2 text-sm font-semibold text-ink">
                                   <span className="truncate">{r.l.institution || r.l.name}</span>
                                   {settled && <Badge tone="positive">Pagado</Badge>}
                                 </span>
@@ -121,7 +116,7 @@ export default async function PrestamosPage() {
                                 </span>
                               </Link>
                               <span className="shrink-0 text-right">
-                                <span className={cn("num block text-sm font-bold", r.receivable ? "text-positive" : "text-ink")}>
+                                <span className={cn("num block text-sm font-semibold", r.receivable ? "text-positive" : "text-ink")}>
                                   {formatMoney(Math.max(0, r.pending), r.l.currency)}
                                 </span>
                                 <span className="block text-[11px] text-muted">{r.receivable ? "por cobrar" : "por pagar"}</span>

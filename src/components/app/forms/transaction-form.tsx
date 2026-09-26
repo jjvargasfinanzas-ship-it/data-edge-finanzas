@@ -205,7 +205,7 @@ export function TransactionForm({ initial, onDone }: { initial: TxInitial; onDon
                 onClick={() => setDate(o.d)}
                 className={cn(
                   "rounded-full px-3 py-1 text-xs font-semibold",
-                  date === o.d ? "bg-navy-900 text-white" : "bg-canvas text-ink-2 hover:bg-line",
+                  date === o.d ? "bg-tint-strong text-teal-700" : "bg-canvas text-ink-2 hover:bg-line",
                 )}
               >
                 {o.l}

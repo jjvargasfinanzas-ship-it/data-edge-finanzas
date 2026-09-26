@@ -41,8 +41,8 @@ const ACCOUNT_ICONS: Record<AccountType, LucideIcon> = {
 export function AccountIcon({ type, className }: { type: AccountType; className?: string }) {
   const I = ACCOUNT_ICONS[type];
   return (
-    <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl bg-navy-900/5 text-navy-700", className)} aria-hidden>
-      <I className="size-[18px]" strokeWidth={2.2} />
+    <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl bg-tint text-teal-700", className)} aria-hidden>
+      <I className="size-4" strokeWidth={2.1} />
     </span>
   );
 }

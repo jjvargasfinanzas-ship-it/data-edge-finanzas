@@ -41,8 +41,8 @@ export function RealDays({ days, currency, today }: { days: RealDayRow[]; curren
       {days.map((d) => (
         <li key={d.date} className="px-4 py-3 sm:px-5">
           <div className="mb-1 flex items-baseline justify-between gap-3">
-            <p className="text-xs font-bold tracking-wide text-muted uppercase">{d.date === today ? "Hoy" : formatLong(d.date)}</p>
-            <p className={cn("num text-xs font-bold", d.closing < 0 ? "text-negative" : "text-ink-2")}>Saldo {formatMoney(d.closing, currency)}</p>
+            <p className="text-xs font-semibold tracking-wide text-muted uppercase">{d.date === today ? "Hoy" : formatLong(d.date)}</p>
+            <p className={cn("num text-xs font-semibold", d.closing < 0 ? "text-negative" : "text-ink-2")}>Saldo {formatMoney(d.closing, currency)}</p>
           </div>
           <ul>
             {d.moves.map((m) => (
@@ -63,7 +63,7 @@ export function RealDays({ days, currency, today }: { days: RealDayRow[]; curren
                     <span className="block truncate text-sm font-semibold text-ink">{m.title}</span>
                     <span className="block truncate text-xs text-muted">{m.subtitle}</span>
                   </span>
-                  <span className={cn("num shrink-0 text-sm font-bold", m.effect > 0 ? "text-positive" : m.effect < 0 ? "text-ink" : "text-muted")}>
+                  <span className={cn("num shrink-0 text-sm font-semibold", m.effect > 0 ? "text-positive" : m.effect < 0 ? "text-ink" : "text-muted")}>
                     {m.effect === 0 ? "Sin efecto" : formatMoney(m.effect, currency, { signed: true })}
                   </span>
                 </button>

@@ -55,7 +55,7 @@ export function AmountInput({
         large ? "h-16 px-4" : "h-11 px-3.5",
       )}
     >
-      <span className={cn("mr-2 font-semibold text-muted", large ? "text-2xl" : "text-[15px]")}>{prefix}</span>
+      <span className={cn("mr-2 font-semibold text-muted", large ? "text-xl" : "text-[15px]")}>{prefix}</span>
       <input
         id={id}
         name={name}
@@ -71,8 +71,8 @@ export function AmountInput({
           onValueChange?.(v);
         }}
         className={cn(
-          "num w-full min-w-0 bg-transparent font-bold text-ink outline-none placeholder:text-muted/40",
-          large ? "text-3xl" : "text-[15px]",
+          "num w-full min-w-0 bg-transparent font-semibold text-ink outline-none placeholder:text-muted/40",
+          large ? "text-2xl" : "text-[15px]",
         )}
       />
     </div>

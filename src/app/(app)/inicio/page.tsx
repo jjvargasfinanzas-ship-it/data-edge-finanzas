@@ -26,7 +26,7 @@ function greeting(hour: number) {
 function SectionTitle({ title, badge, action }: { title: string; badge?: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-5">
-      <h2 className="flex items-center gap-2 text-[15px] font-bold text-ink">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
         {title} {badge}
       </h2>
       {action}
@@ -65,23 +65,21 @@ export default async function InicioPage() {
   const investments = byTypes(["investment"]);
   const cardLimit = cards.reduce((s, a) => s + toBase(a.credit_limit ?? 0, a.currency), 0);
   const cardAvailable = cards.reduce((s, a) => s + toBase(Math.max(0, (a.credit_limit ?? 0) - Math.max(0, -a.balance)), a.currency), 0);
-  const tile = (key: string, label: string, icon: PositionTile["icon"], list: typeof active, href: string): PositionTile => ({
+  const tile = (key: PositionTile["key"], label: string, list: typeof active, href: string): PositionTile => ({
     key,
     label,
-    icon,
     value: sumBase(list),
     hint: list.length ? count(list.length, "cuenta", "cuentas") : "Agregar",
     href,
     empty: !list.length,
   });
   const positions: PositionTile[] = [
-    tile("ahorros", "Cuentas de ahorro", "bank_savings", savings, "/cuentas?tipo=ahorros"),
-    tile("billeteras", "Billeteras digitales", "digital_wallet", wallets, "/cuentas?tipo=billeteras"),
-    tile("inversiones", "Inversiones", "investment", investments, "/cuentas?tipo=inversiones"),
+    tile("ahorros", "Cuentas de ahorro", savings, "/cuentas?tipo=ahorros"),
+    tile("billeteras", "Billeteras digitales", wallets, "/cuentas?tipo=billeteras"),
+    tile("inversiones", "Inversiones", investments, "/cuentas?tipo=inversiones"),
     {
       key: "tarjetas",
       label: "Disponible en tarjetas",
-      icon: "credit_card",
       value: cardAvailable,
       hint: cards.length ? `de ${formatMoney(cardLimit, currency, { compact: true })} de cupo` : "Agregar",
       href: "/tarjetas",
@@ -127,15 +125,15 @@ export default async function InicioPage() {
   return (
     <div className="space-y-4">
       <header>
-        <p className="text-xs font-semibold text-teal-700 first-letter:uppercase">{formatLong(today)}</p>
-        <h1 className="font-display text-2xl leading-tight font-semibold text-ink sm:text-[28px]">
+        <p className="text-xs font-medium text-muted first-letter:uppercase">{formatLong(today)}</p>
+        <h1 className="font-display text-xl leading-tight font-semibold text-ink sm:text-2xl">
           {greeting(hourInTz(tz))}, {profile.first_name || "hola"}.
         </h1>
       </header>
 
       {showSteps && (
         <Card className="p-4">
-          <p className="text-sm font-bold text-ink">Completa tu espacio financiero</p>
+          <p className="text-sm font-semibold text-ink">Completa tu espacio financiero</p>
           <ul className="mt-3 space-y-2">
             {steps.map((s) => (
               <li key={s.label} className="flex items-center gap-3">
@@ -155,10 +153,10 @@ export default async function InicioPage() {
         <div className="min-w-0 space-y-4">
           <Card>
             <div className="px-4 pt-4 sm:px-5">
-              <p className="flex items-center gap-2 text-[13px] font-semibold text-muted">
+              <p className="flex items-center gap-2 text-xs font-medium text-muted">
                 Saldo real disponible <Badge tone="positive">Real</Badge>
               </p>
-              <p className={cn("num mt-1 text-[32px] leading-tight font-bold", flow.startBalance < 0 ? "text-negative" : "text-ink")}>
+              <p className={cn("num mt-1 text-2xl leading-tight font-semibold", flow.startBalance < 0 ? "text-negative" : "text-ink")}>
                 {formatMoney(flow.startBalance, currency)}
               </p>
               <p className="mt-0.5 text-xs text-muted">Lo que hay hoy en tus cuentas, con los movimientos ya confirmados. Toca una cuenta para ver de dónde sale.</p>
@@ -166,30 +164,30 @@ export default async function InicioPage() {
             <ul className="mt-2 divide-y divide-line border-t border-line">
               {liquid.map((a) => (
                 <li key={a.id}>
-                  <Link href={`/cuentas/${a.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-canvas/60 sm:px-5">
+                  <Link href={`/cuentas/${a.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-tint/70 sm:px-5">
                     <AccountIcon type={a.type} className="size-8 rounded-lg [&_svg]:size-4" />
                     <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{a.name}</span>
-                    <span className={cn("num shrink-0 text-sm font-bold", a.balance < 0 ? "text-negative" : "text-ink")}>{formatMoney(a.balance, a.currency)}</span>
+                    <span className={cn("num shrink-0 text-sm font-semibold", a.balance < 0 ? "text-negative" : "text-ink")}>{formatMoney(a.balance, a.currency)}</span>
                     <ChevronRight className="size-4 shrink-0 text-muted" />
                   </Link>
                 </li>
               ))}
               {cards.length > 0 && (
                 <li>
-                  <Link href="/tarjetas" className="flex items-center gap-3 px-4 py-2.5 text-muted hover:bg-canvas/60 sm:px-5">
+                  <Link href="/tarjetas" className="flex items-center gap-3 px-4 py-2.5 text-muted hover:bg-tint/70 sm:px-5">
                     <span className="min-w-0 flex-1 truncate text-xs font-semibold">Deuda en tarjetas (no se resta del disponible)</span>
-                    <span className="num shrink-0 text-xs font-bold">{formatMoney(cardDebt, currency)}</span>
+                    <span className="num shrink-0 text-xs font-semibold">{formatMoney(cardDebt, currency)}</span>
                     <ChevronRight className="size-4 shrink-0" />
                   </Link>
                 </li>
               )}
               {(owedToMe > 0 || iOwe > 0) && (
                 <li>
-                  <Link href="/prestamos" className="flex items-center gap-3 px-4 py-2.5 text-muted hover:bg-canvas/60 sm:px-5">
+                  <Link href="/prestamos" className="flex items-center gap-3 px-4 py-2.5 text-muted hover:bg-tint/70 sm:px-5">
                     <span className="min-w-0 flex-1 truncate text-xs font-semibold">
                       {owedToMe > 0 && iOwe > 0 ? "Préstamos: me deben / debo" : owedToMe > 0 ? "Préstamos que me deben (no suman al disponible)" : "Préstamos que debo (no se restan del disponible)"}
                     </span>
-                    <span className="num shrink-0 text-xs font-bold">
+                    <span className="num shrink-0 text-xs font-semibold">
                       {owedToMe > 0 && <span className="text-positive">{formatMoney(owedToMe, currency)}</span>}
                       {owedToMe > 0 && iOwe > 0 && " / "}
                       {iOwe > 0 && formatMoney(iOwe, currency)}
@@ -209,7 +207,7 @@ export default async function InicioPage() {
                 <PendingList items={toConfirm.slice(0, 4)} baseCurrency={currency} group="none" />
               </div>
               {toConfirm.length > 4 && (
-                <Link href="/flujo-de-caja?v=proyectado" className="block border-t border-line px-4 py-2.5 text-center text-sm font-bold text-teal-700 hover:bg-canvas sm:px-5">
+                <Link href="/flujo-de-caja?v=proyectado" className="block border-t border-line px-4 py-2.5 text-center text-sm font-semibold text-teal-700 hover:bg-canvas sm:px-5">
                   Ver los {toConfirm.length} por confirmar
                 </Link>
               )}
@@ -220,7 +218,7 @@ export default async function InicioPage() {
             <SectionTitle
               title={`${monthName.charAt(0).toUpperCase()}${monthName.slice(1)} · real`}
               action={
-                <Link href="/movimientos" className="shrink-0 text-sm font-bold text-teal-700 hover:underline">
+                <Link href="/movimientos" className="shrink-0 text-xs font-semibold text-teal-700 hover:underline">
                   Movimientos
                 </Link>
               }
@@ -249,7 +247,7 @@ export default async function InicioPage() {
               title="Proyección del mes"
               badge={<Badge>Estimado</Badge>}
               action={
-                <Link href="/flujo-de-caja?v=proyectado" className="inline-flex shrink-0 items-center gap-1 text-sm font-bold text-teal-700 hover:underline">
+                <Link href="/flujo-de-caja?v=proyectado" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-700 hover:underline">
                   Flujo <ArrowRight className="size-4" />
                 </Link>
               }
@@ -282,7 +280,7 @@ export default async function InicioPage() {
             <SectionTitle
               title="Próximos 7 días"
               action={
-                <Link href="/calendario" className="shrink-0 text-sm font-bold text-teal-700 hover:underline">
+                <Link href="/calendario" className="shrink-0 text-xs font-semibold text-teal-700 hover:underline">
                   Calendario
                 </Link>
               }
@@ -312,7 +310,7 @@ export default async function InicioPage() {
           <SectionTitle
             title="¿En qué se va tu dinero?"
             action={
-              <Link href="/movimientos?tipo=expense" className="shrink-0 text-sm font-bold text-teal-700 hover:underline">
+              <Link href="/movimientos?tipo=expense" className="shrink-0 text-xs font-semibold text-teal-700 hover:underline">
                 Ver gastos
               </Link>
             }
@@ -331,7 +329,7 @@ export default async function InicioPage() {
             <SectionTitle
               title="Tarjetas"
               action={
-                <Link href="/tarjetas" className="shrink-0 text-sm font-bold text-teal-700 hover:underline">
+                <Link href="/tarjetas" className="shrink-0 text-xs font-semibold text-teal-700 hover:underline">
                   Ver
                 </Link>
               }
@@ -346,12 +344,12 @@ export default async function InicioPage() {
                   <Link key={c.id} href={`/cuentas/${c.id}`} className="block">
                     <div className="flex items-baseline justify-between gap-2 text-sm">
                       <span className="truncate font-semibold text-ink">{c.name}</span>
-                      <span className="num shrink-0 font-bold">{formatMoney(used, c.currency)}</span>
+                      <span className="num shrink-0 font-semibold">{formatMoney(used, c.currency)}</span>
                     </div>
                     <Progress value={pct} tone={pct >= 90 ? "negative" : pct >= 70 ? "warning" : "brand"} className="mt-2" label={`Uso de ${c.name}`} />
                     <p className="mt-1.5 flex items-center justify-between text-xs text-muted">
                       <span>{formatPct(pct, { digits: 0 })} del cupo</span>
-                      {due && <span className={cn(dueIn !== null && dueIn <= 3 && used > 0 && "font-bold text-warning")}>Pago {formatShort(due)}</span>}
+                      {due && <span className={cn(dueIn !== null && dueIn <= 3 && used > 0 && "font-semibold text-warning")}>Pago {formatShort(due)}</span>}
                     </p>
                   </Link>
                 );

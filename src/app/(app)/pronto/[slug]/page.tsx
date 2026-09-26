@@ -16,7 +16,7 @@ export default async function ProntoPage({ params }: { params: Promise<{ slug: s
   if (!mod) notFound();
   return (
     <Card className="mx-auto mt-6 max-w-xl p-8 text-center">
-      <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-navy-900 text-teal-300">
+      <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-tint text-teal-700">
         <Lock className="size-6" />
       </div>
       <Badge tone="brand" className="mt-5">{mod.block}</Badge>

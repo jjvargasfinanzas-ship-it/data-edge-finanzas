@@ -100,7 +100,7 @@ export function PlannedList({ rows, currency, monthLabel }: { rows: PlannedRow[]
         if (!items.length) return null;
         return (
           <section key={g.kind}>
-            <h2 className="mb-2 px-1 text-xs font-bold tracking-[0.14em] text-muted uppercase">{g.label}</h2>
+            <h2 className="mb-2 px-1 text-xs font-semibold tracking-[0.14em] text-muted uppercase">{g.label}</h2>
             <Card>
               <ul className="divide-y divide-line">
                 {items.map((r) => (
@@ -113,7 +113,7 @@ export function PlannedList({ rows, currency, monthLabel }: { rows: PlannedRow[]
                       <CategoryIcon icon={r.icon} color={r.color} />
                     )}
                     <button type="button" onClick={() => openPlanned({ ...r })} className="min-w-0 flex-1 text-left">
-                      <p className="flex items-center gap-2 truncate text-sm font-bold text-ink">
+                      <p className="flex items-center gap-2 truncate text-sm font-semibold text-ink">
                         <span className="truncate">{r.name}</span>
                         {!r.is_active && <Badge>Pausado</Badge>}
                       </p>
@@ -126,7 +126,7 @@ export function PlannedList({ rows, currency, monthLabel }: { rows: PlannedRow[]
                       <MonthStatus r={r} monthLabel={monthLabel} />
                     </button>
                     <div className="shrink-0 text-right">
-                      <Money value={r.amount} currency={r.currency} className={cn("text-sm font-bold", r.kind === "income" ? "text-positive" : "text-ink")} />
+                      <Money value={r.amount} currency={r.currency} className={cn("text-sm font-semibold", r.kind === "income" ? "text-positive" : "text-ink")} />
                       {r.frequency !== "monthly" && r.monthly > 0 && (
                         <p className="num text-[11px] text-muted">
                           ≈ <Money value={r.monthly} currency={currency} compact />/mes

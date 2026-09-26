@@ -64,7 +64,7 @@ export function AccountMoves({ moves, currency }: { moves: AccountMove[]; curren
               </span>
             </span>
             <span className="shrink-0 text-right">
-              <span className={cn("num block text-sm font-bold whitespace-nowrap", m.effect > 0 ? "text-positive" : "text-ink")}>
+              <span className={cn("num block text-sm font-semibold whitespace-nowrap", m.effect > 0 ? "text-positive" : "text-ink")}>
                 {formatMoney(m.effect, currency, { signed: true })}
               </span>
               <span className="num block text-[11px] whitespace-nowrap text-muted">Saldo {formatMoney(m.after, currency)}</span>

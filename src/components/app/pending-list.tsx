@@ -29,7 +29,7 @@ function whenLabel(o: PendingItem, today: string) {
 }
 
 const chip =
-  "inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-bold transition-colors disabled:opacity-50";
+  "inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-colors disabled:opacity-50";
 
 function Row({ o, baseCurrency, showDate = true }: { o: PendingItem; baseCurrency: Currency; showDate?: boolean }) {
   const { accounts, planned, today, openTransaction, openPlanned } = useAppData();
@@ -92,7 +92,7 @@ function Row({ o, baseCurrency, showDate = true }: { o: PendingItem; baseCurrenc
               {o.state === "partial" && <Badge tone="warning" className="ml-1.5 align-middle">Parcial</Badge>}
               {o.flow === "card_estimate" && <Badge className="ml-1.5 align-middle">Estimado</Badge>}
             </p>
-            <span className={cn("num shrink-0 text-sm font-bold", isIn ? "text-positive" : "text-ink")}>
+            <span className={cn("num shrink-0 text-sm font-semibold", isIn ? "text-positive" : "text-ink")}>
               {isIn ? "+" : o.cashEffect === 0 && o.flow === "transfer" ? "" : "−"}
               {formatMoney(o.amount, o.currency)}
             </span>
@@ -226,7 +226,7 @@ export function PendingList({
     <div>
       {groups.map((g) => (
         <section key={g.title}>
-          <h3 className={cn("pt-2 text-[11px] font-bold tracking-[0.12em] uppercase", g.tone ?? "text-muted")}>{g.title}</h3>
+          <h3 className={cn("pt-2 text-[11px] font-semibold tracking-[0.12em] uppercase", g.tone ?? "text-muted")}>{g.title}</h3>
           <ul className="divide-y divide-line">
             {g.items.map((o) => (
               <Row key={o.key} o={o} baseCurrency={baseCurrency} showDate={group === "status" || g.title === "Por confirmar"} />

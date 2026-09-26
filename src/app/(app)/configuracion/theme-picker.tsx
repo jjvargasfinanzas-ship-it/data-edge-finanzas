@@ -53,7 +53,7 @@ export function ThemePicker({ current }: { current: string }) {
             </div>
             <div className="flex items-center justify-between gap-2 px-3 py-2.5">
               <span>
-                <span className="block text-sm font-bold text-ink">{t.name}</span>
+                <span className="block text-sm font-semibold text-ink">{t.name}</span>
                 <span className="block text-xs text-muted">{t.hint}</span>
               </span>
               {active && (

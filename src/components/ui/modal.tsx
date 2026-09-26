@@ -62,7 +62,7 @@ export function Modal({
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-navy-950/50 backdrop-blur-[2px] animate-[fade-up_0.2s_both]" onClick={onClose} />
+      <div className="absolute inset-0 bg-navy-950/25 backdrop-blur-[2px] animate-[fade-up_0.2s_both]" onClick={onClose} />
       <div
         ref={ref}
         role="dialog"
@@ -78,7 +78,7 @@ export function Modal({
       >
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-line bg-surface/95 px-5 py-4 backdrop-blur">
           <div>
-            <h2 id={titleId} className="text-lg font-bold text-ink">
+            <h2 id={titleId} className="text-lg font-semibold text-ink">
               {title}
             </h2>
             {description && <p className="mt-0.5 text-sm text-muted">{description}</p>}

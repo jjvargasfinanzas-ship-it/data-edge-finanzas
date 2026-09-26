@@ -58,7 +58,7 @@ export function CashPosition({
         {/* Disponible */}
         <div className="p-5">
           <p className="text-[13px] font-semibold text-muted">Disponible hoy</p>
-          <p className={cn("num mt-1 text-[26px] leading-tight font-bold", available < 0 ? "text-negative" : "text-ink")}>
+          <p className={cn("num mt-1 text-[22px] leading-tight font-semibold", available < 0 ? "text-negative" : "text-ink")}>
             {formatMoney(available, currency)}
           </p>
           <details className="group mt-2">
@@ -74,7 +74,7 @@ export function CashPosition({
                   <li key={a.id} className="flex items-center gap-2">
                     <AccountIcon type={a.type} className="size-6 rounded-md [&_svg]:size-3.5" />
                     <span className="flex-1 truncate font-semibold text-ink-2">{a.name}</span>
-                    <span className={cn("num font-bold", a.baseBalance < 0 ? "text-negative" : "text-ink")}>
+                    <span className={cn("num font-semibold", a.baseBalance < 0 ? "text-negative" : "text-ink")}>
                       {formatMoney(a.balance, a.currency)}
                     </span>
                   </li>
@@ -88,7 +88,7 @@ export function CashPosition({
         {/* Por recibir */}
         <div className="border-line p-5 max-lg:border-t lg:border-l-0">
           <p className="text-[13px] font-semibold text-muted">Por recibir</p>
-          <p className="num mt-1 text-[26px] leading-tight font-bold text-positive">{formatMoney(toReceive, currency)}</p>
+          <p className="num mt-1 text-[22px] leading-tight font-semibold text-positive">{formatMoney(toReceive, currency)}</p>
           <p className="mt-2 text-xs text-muted">
             {receiveCount ? `${receiveCount} ingreso${receiveCount > 1 ? "s" : ""} programado${receiveCount > 1 ? "s" : ""} pendiente${receiveCount > 1 ? "s" : ""}` : "Nada pendiente por recibir"}
           </p>
@@ -97,22 +97,22 @@ export function CashPosition({
         {/* Por pagar */}
         <div className="border-line p-5 max-lg:border-t">
           <p className="text-[13px] font-semibold text-muted">Por pagar</p>
-          <p className="num mt-1 text-[26px] leading-tight font-bold text-ink">{formatMoney(toPay, currency)}</p>
+          <p className="num mt-1 text-[22px] leading-tight font-semibold text-ink">{formatMoney(toPay, currency)}</p>
           <p className="mt-2 text-xs text-muted">
             {payCount ? `${payCount} pago${payCount > 1 ? "s" : ""} pendiente${payCount > 1 ? "s" : ""}${includesCards ? ", incluye tarjetas" : ""}` : "Nada pendiente por pagar"}
-            {overdueCount > 0 && <span className="ml-1 font-bold text-warning">· {overdueCount} vencido{overdueCount > 1 ? "s" : ""}</span>}
+            {overdueCount > 0 && <span className="ml-1 font-semibold text-warning">· {overdueCount} vencido{overdueCount > 1 ? "s" : ""}</span>}
           </p>
         </div>
         <Op icon={Equal} />
         {/* Proyectado */}
-        <div className="bg-navy-950 p-5 text-white">
-          <p className="text-[13px] font-semibold text-white/60">Saldo proyectado</p>
-          <p className={cn("num mt-1 text-[26px] leading-tight font-bold", projected < 0 ? "text-[#ff9b86]" : "text-teal-300")}>
+        <div className="bg-tint p-5">
+          <p className="text-[13px] font-semibold text-muted">Saldo proyectado</p>
+          <p className={cn("num mt-1 text-[22px] leading-tight font-semibold", projected < 0 ? "text-negative" : "text-teal-700")}>
             {formatMoney(projected, currency)}
           </p>
-          <p className="mt-2 text-xs text-white/60">{projectedLabel}</p>
+          <p className="mt-2 text-xs text-muted">{projectedLabel}</p>
           {lowPoint && lowPoint.value < projected && (
-            <p className={cn("mt-1 text-xs", lowPoint.value < 0 ? "font-bold text-[#ff9b86]" : "text-white/60")}>
+            <p className={cn("mt-1 text-xs", lowPoint.value < 0 ? "font-semibold text-negative" : "text-muted")}>
               Punto más bajo: <span className="num">{formatMoney(lowPoint.value, currency)}</span> el {lowPoint.label}
             </p>
           )}

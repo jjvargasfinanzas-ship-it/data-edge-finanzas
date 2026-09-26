@@ -9,17 +9,17 @@ const base =
   "inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-150 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-teal-500 text-navy-950 hover:bg-teal-400 shadow-[0_6px_20px_-8px_rgb(20_191_168/0.7)]",
-  secondary: "bg-surface text-ink border border-line-strong hover:border-navy-500 hover:bg-canvas",
-  ghost: "text-ink-2 hover:bg-navy-900/5 hover:text-ink",
-  danger: "bg-negative text-white hover:brightness-110",
-  dark: "bg-navy-900 text-white hover:bg-navy-800",
+  primary: "bg-teal-500 text-navy-950 hover:bg-teal-400 shadow-sm",
+  secondary: "bg-surface text-ink-2 border border-line-strong hover:border-teal-400/60 hover:bg-tint hover:text-ink",
+  ghost: "text-ink-2 hover:bg-tint-2 hover:text-ink",
+  danger: "bg-negative-50 text-negative hover:bg-negative hover:text-white",
+  dark: "bg-navy-700 text-white hover:bg-navy-600",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-11 px-4 text-sm",
-  lg: "h-13 px-6 text-base",
+  sm: "h-8 px-3 text-xs",
+  md: "h-10 px-4 text-sm",
+  lg: "h-12 px-6 text-sm",
 };
 
 export function buttonClass(variant: Variant = "primary", size: Size = "md", className?: string) {

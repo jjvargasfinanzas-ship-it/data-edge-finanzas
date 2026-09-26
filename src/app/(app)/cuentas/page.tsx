@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, ChevronRight, Wallet } from "lucide-react";
 import { NewAccountButton } from "@/components/app/open-buttons";
 import { Badge, Card, EmptyState, Money, PageHeader } from "@/components/ui/misc";
+import { StatTile, TileGrid } from "@/components/ui/tiles";
 import { AccountIcon } from "@/components/ui/icons";
 import { cn } from "@/components/ui/cn";
 import { getAccounts, getContext, getRates } from "@/lib/data";
@@ -63,7 +64,7 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
                   {items.some((a) => a.currency !== currency) && ` · convertido a ${currency}`}
                 </p>
               </div>
-              <Money value={total} currency={currency} className={cn("shrink-0 text-2xl font-bold", total < 0 ? "text-negative" : "text-ink")} />
+              <Money value={total} currency={currency} className={cn("shrink-0 text-2xl font-semibold", total < 0 ? "text-negative" : "text-ink")} />
             </Card>
             <Card>
               <ul className="divide-y divide-line">
@@ -71,10 +72,10 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
                   const share = total > 0 ? Math.max(0, (base(a) / total) * 100) : 0;
                   return (
                     <li key={a.id}>
-                      <Link href={`/cuentas/${a.id}`} className="flex items-center gap-3 px-5 py-4 hover:bg-canvas/60">
+                      <Link href={`/cuentas/${a.id}`} className="flex items-center gap-3 px-5 py-4 hover:bg-tint/70">
                         <AccountIcon type={a.type} />
                         <div className="min-w-0 flex-1">
-                          <p className="flex items-center gap-2 truncate text-sm font-bold text-ink">
+                          <p className="flex items-center gap-2 truncate text-sm font-semibold text-ink">
                             {a.name}
                             {a.currency !== "COP" && <Badge tone="brand">{a.currency}</Badge>}
                           </p>
@@ -83,7 +84,7 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
                           </p>
                         </div>
                         <div className="text-right">
-                          <Money value={a.balance} currency={a.currency} className={cn("text-[15px] font-bold whitespace-nowrap", a.balance < 0 ? "text-negative" : "text-ink")} />
+                          <Money value={a.balance} currency={a.currency} className={cn("text-sm font-semibold whitespace-nowrap", a.balance < 0 ? "text-negative" : "text-ink")} />
                           {a.currency !== currency && (
                             <p className="num text-[11px] text-muted">≈ <Money value={base(a)} currency={currency} /></p>
                           )}
@@ -109,20 +110,11 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
         actions={<NewAccountButton>Nueva cuenta</NewAccountButton>}
       />
 
-      <Card className="mb-4 grid grid-cols-3 divide-x divide-line">
-        {[
-          { l: "Disponible", v: liquid, h: "Bancos, efectivo, billeteras" },
-          { l: "Activos", v: assets, h: "Incluye inversiones y lo que me deben" },
-          { l: "Deudas", v: liabilities, h: "Tarjetas y préstamos" },
-        ].map((k) => (
-          <div key={k.l} className="min-w-0 px-3 py-2.5 sm:px-5 sm:py-3">
-            <p className="truncate text-[11px] font-semibold text-muted sm:text-xs">{k.l}</p>
-            <Money value={k.v} currency={currency} compact className="text-[15px] font-bold sm:hidden" />
-            <Money value={k.v} currency={currency} className="hidden text-lg font-bold sm:inline" />
-            <p className="hidden truncate text-[11px] text-muted sm:block">{k.h}</p>
-          </div>
-        ))}
-      </Card>
+      <TileGrid cols={3} className="mb-5">
+        <StatTile label="Disponible" value={liquid} currency={currency} hint="Bancos, efectivo, billeteras" href="/flujo-de-caja" />
+        <StatTile label="Activos" value={assets} currency={currency} hint="Incluye inversiones y lo que me deben" />
+        <StatTile label="Deudas" value={liabilities} currency={currency} hint="Tarjetas y préstamos" href="/tarjetas" />
+      </TileGrid>
 
       {visible.length === 0 ? (
         <Card>
@@ -137,17 +129,17 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
             return (
               <section key={g.label}>
                 <div className="mb-2 flex items-baseline justify-between px-1">
-                  <h2 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">{g.label}</h2>
-                  <Money value={total} currency={currency} className="text-sm font-bold text-ink-2" />
+                  <h2 className="text-xs font-semibold tracking-[0.14em] text-muted uppercase">{g.label}</h2>
+                  <Money value={total} currency={currency} className="text-sm font-semibold text-ink-2" />
                 </div>
                 <Card>
                   <ul className="divide-y divide-line">
                     {items.map((a) => (
                       <li key={a.id}>
-                        <Link href={`/cuentas/${a.id}`} className={cn("flex items-center gap-3 px-5 py-4 hover:bg-canvas/60", a.is_archived && "opacity-60")}>
+                        <Link href={`/cuentas/${a.id}`} className={cn("flex items-center gap-3 px-5 py-4 hover:bg-tint/70", a.is_archived && "opacity-60")}>
                           <AccountIcon type={a.type} />
                           <div className="min-w-0 flex-1">
-                            <p className="flex items-center gap-2 truncate text-sm font-bold text-ink">
+                            <p className="flex items-center gap-2 truncate text-sm font-semibold text-ink">
                               {a.name}
                               {a.is_archived && <Badge>Archivada</Badge>}
                               {a.currency !== "COP" && <Badge tone="brand">{a.currency}</Badge>}
@@ -157,7 +149,7 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
                             </p>
                           </div>
                           <div className="text-right">
-                            <Money value={a.balance} currency={a.currency} className={cn("text-[15px] font-bold", a.balance < 0 ? "text-negative" : "text-ink")} />
+                            <Money value={a.balance} currency={a.currency} className={cn("text-sm font-semibold", a.balance < 0 ? "text-negative" : "text-ink")} />
                             {a.currency !== currency && (
                               <p className="num text-[11px] text-muted">≈ <Money value={base(a)} currency={currency} /></p>
                             )}

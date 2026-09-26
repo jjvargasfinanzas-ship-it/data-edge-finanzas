@@ -72,7 +72,7 @@ export function CategoriesManager({ categories }: { categories: Category[] }) {
             <div key={p.id} className={cn("rounded-2xl border border-line p-3", p.is_archived && "opacity-55")}>
               <div className="flex items-center gap-2.5">
                 <CategoryIcon icon={p.icon} color={p.color} size="sm" />
-                <span className="flex-1 truncate text-sm font-bold text-ink">{p.name}</span>
+                <span className="flex-1 truncate text-sm font-semibold text-ink">{p.name}</span>
                 <button type="button" onClick={() => setEditing({ id: p.id, name: p.name, kind, title: "Editar categoría" })} className="grid size-7 place-items-center rounded-lg text-muted hover:bg-canvas hover:text-ink" aria-label={`Editar ${p.name}`}>
                   <Pencil className="size-3.5" />
                 </button>

@@ -20,7 +20,7 @@ export function CategoryBars({ rows, total, currency }: { rows: CategoryRow[]; t
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2 text-sm">
               <span className="truncate font-semibold text-ink">{r.name}</span>
-              <span className="num shrink-0 font-bold text-ink">{formatMoney(r.value, currency)}</span>
+              <span className="num shrink-0 font-semibold text-ink">{formatMoney(r.value, currency)}</span>
             </div>
             <div className="mt-1.5 flex items-center gap-2">
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-canvas">

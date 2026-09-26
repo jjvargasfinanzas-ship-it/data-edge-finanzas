@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import "@fontsource-variable/manrope";
-import "@fontsource-variable/fraunces";
 import "./globals.css";
 import { ServiceWorker } from "@/components/app/service-worker";
 

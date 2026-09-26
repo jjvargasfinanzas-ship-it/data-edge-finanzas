@@ -141,7 +141,7 @@ export function Wizard({ firstName, today }: { firstName: string; today: string 
                     {goal === g.value && <Check className="size-3" strokeWidth={3} />}
                   </span>
                   <span>
-                    <span className="block text-[15px] font-bold text-ink">{g.label}</span>
+                    <span className="block text-sm font-semibold text-ink">{g.label}</span>
                     <span className="block text-sm text-muted">{g.hint}</span>
                   </span>
                 </button>
