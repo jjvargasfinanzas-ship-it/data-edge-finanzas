@@ -2,7 +2,7 @@ import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes, type T
 import { cn } from "./cn";
 
 const control =
-  "w-full rounded-xl border border-line-strong bg-surface px-3.5 text-[15px] text-ink placeholder:text-muted/70 transition-colors focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/15 disabled:bg-canvas";
+  "w-full rounded-xl border border-card-border bg-card px-3.5 text-[15px] text-ink placeholder:text-muted/70 transition-colors focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/15 disabled:bg-canvas";
 
 export function Field({
   label,

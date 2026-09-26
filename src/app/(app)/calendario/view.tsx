@@ -187,7 +187,7 @@ export function CalendarView({
                 key={v}
                 href={href({ vista: v })}
                 scroll={false}
-                className={cn("rounded-lg px-3 py-1 text-sm font-semibold capitalize", v === view ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}
+                className={cn("rounded-lg px-3 py-1 text-sm font-semibold capitalize", v === view ? "bg-tint text-teal-700 shadow-sm" : "text-muted hover:text-ink")}
               >
                 {v}
               </Link>

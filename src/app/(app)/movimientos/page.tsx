@@ -77,7 +77,7 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
             <a
               href={`/api/export/movimientos?mes=${month}`}
               aria-label="Descargar CSV"
-              className="inline-flex h-11 items-center gap-2 rounded-xl border border-line-strong bg-surface px-4 text-sm font-semibold text-ink hover:bg-canvas"
+              className="inline-flex h-11 items-center gap-2 rounded-xl border border-card-border bg-card px-4 text-sm font-semibold text-ink hover:bg-canvas"
             >
               <Download className="size-4" /> <span className="hidden sm:inline">CSV</span>
             </a>
@@ -94,9 +94,9 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
       />
 
       <TileGrid cols={3} className="mb-4">
-        <StatTile label="Ingresos" value={totals.income} currency={currency} tone="positive" href={`/movimientos?mes=${month}&tipo=income`} />
-        <StatTile label="Gastos" value={totals.expense} currency={currency} href={`/movimientos?mes=${month}&tipo=expense`} />
-        <StatTile label="Neto" value={totals.savings} currency={currency} signed href={`/movimientos?mes=${month}`} />
+        <StatTile label="Ingresos" value={totals.income} currency={currency} tone="positive" accent="teal" href={`/movimientos?mes=${month}&tipo=income`} />
+        <StatTile label="Gastos" value={totals.expense} currency={currency} accent="navy" href={`/movimientos?mes=${month}&tipo=expense`} />
+        <StatTile label="Neto" value={totals.savings} currency={currency} signed accent="mix" href={`/movimientos?mes=${month}`} />
       </TileGrid>
 
       <Card>

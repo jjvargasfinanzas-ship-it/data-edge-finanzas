@@ -25,7 +25,7 @@ function NavLink({ item, path, locked, onNavigate }: { item: NavItem; path: stri
       aria-current={active ? "page" : undefined}
       className={cn(
         "group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition-colors",
-        active ? "bg-tint font-semibold text-teal-700" : locked ? "text-muted/70 hover:text-ink-2" : "text-ink-2 hover:bg-tint-2 hover:text-ink",
+        active ? "bg-pastel-teal font-semibold text-teal-700" : locked ? "text-muted/70 hover:text-ink-2" : "text-ink-2 hover:bg-tint-2 hover:text-ink",
       )}
     >
       <I className={cn("size-4 shrink-0", active ? "text-teal-600" : "text-muted")} strokeWidth={2.1} />
@@ -193,7 +193,7 @@ export function AppShell({
   return (
     <div className="min-h-dvh bg-canvas lg:pl-[248px]" data-theme={theme !== "data-edge" ? theme : undefined}>
       {/* Sidebar escritorio */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] border-r border-line bg-surface lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] border-r border-card-border bg-card lg:block">
         <SidebarContent path={path} name={name} />
       </aside>
 
@@ -205,7 +205,7 @@ export function AppShell({
         <button
           type="button"
           onClick={() => setDrawer(true)}
-          className="grid size-10 place-items-center rounded-xl text-ink hover:bg-surface"
+          className="grid size-10 place-items-center rounded-xl text-ink hover:bg-card"
           aria-label="Abrir menú"
         >
           <Menu className="size-5" />
@@ -216,7 +216,7 @@ export function AppShell({
       {drawer && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-navy-950/25 backdrop-blur-[2px]" onClick={() => setDrawer(false)} />
-          <div className="absolute inset-y-0 right-0 w-[280px] bg-surface shadow-pop animate-[fade-up_0.2s_both]">
+          <div className="absolute inset-y-0 right-0 w-[280px] bg-card shadow-pop animate-[fade-up_0.2s_both]">
             <button
               type="button"
               onClick={() => setDrawer(false)}
@@ -240,7 +240,7 @@ export function AppShell({
 
       {/* Navegación inferior móvil */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-card-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
         aria-label="Navegación rápida"
       >
         <div className="mx-auto grid max-w-md grid-cols-5 items-end px-2">

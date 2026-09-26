@@ -44,7 +44,7 @@ export function TransactionFilters({
   return (
     <div className="mb-3 space-y-2 sm:mb-4" aria-busy={pending}>
     <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-      <div className="flex shrink-0 items-center rounded-xl border border-line-strong bg-surface">
+      <div className="flex shrink-0 items-center rounded-xl border border-card-border bg-card">
         <button type="button" onClick={() => shift(-1)} className="grid size-10 place-items-center text-muted hover:text-ink" aria-label="Mes anterior">
           <ChevronLeft className="size-4" />
         </button>
@@ -61,7 +61,7 @@ export function TransactionFilters({
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "relative ml-auto grid size-10 shrink-0 place-items-center rounded-xl border border-line-strong bg-surface text-muted hover:text-ink sm:hidden",
+          "relative ml-auto grid size-10 shrink-0 place-items-center rounded-xl border border-card-border bg-card text-muted hover:text-ink sm:hidden",
           open && "text-ink",
         )}
         aria-expanded={open}

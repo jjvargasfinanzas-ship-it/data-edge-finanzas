@@ -56,9 +56,9 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
           </Card>
         ) : (
           <>
-            <Card className="mb-4 flex items-center justify-between gap-3 px-5 py-4">
+            <Card className="mb-4 flex items-center justify-between gap-3 border-transparent bg-pastel-teal px-5 py-4">
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-muted">Saldo total</p>
+                <p className="text-[13px] font-semibold text-ink-2">Saldo total</p>
                 <p className="text-xs text-muted">
                   {items.length} {items.length === 1 ? "cuenta" : "cuentas"}
                   {items.some((a) => a.currency !== currency) && ` · convertido a ${currency}`}
@@ -111,9 +111,9 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
       />
 
       <TileGrid cols={3} className="mb-5">
-        <StatTile label="Disponible" value={liquid} currency={currency} hint="Bancos, efectivo, billeteras" href="/flujo-de-caja" />
-        <StatTile label="Activos" value={assets} currency={currency} hint="Incluye inversiones y lo que me deben" />
-        <StatTile label="Deudas" value={liabilities} currency={currency} hint="Tarjetas y préstamos" href="/tarjetas" />
+        <StatTile label="Disponible" value={liquid} currency={currency} hint="Bancos, efectivo, billeteras" accent="teal" href="/flujo-de-caja" />
+        <StatTile label="Activos" value={assets} currency={currency} hint="Incluye inversiones y lo que me deben" accent="mix" />
+        <StatTile label="Deudas" value={liabilities} currency={currency} hint="Tarjetas y préstamos" accent="navy" href="/tarjetas" />
       </TileGrid>
 
       {visible.length === 0 ? (

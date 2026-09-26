@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChartLine, CreditCard, PiggyBank, Smartphone } from "lucide-react";
-import { StatTile, TileGrid } from "@/components/ui/tiles";
+import { StatTile, TileGrid, type TileAccent } from "@/components/ui/tiles";
 import type { Currency } from "@/lib/money";
 
 export interface PositionTile {
@@ -13,6 +13,7 @@ export interface PositionTile {
 }
 
 const ICONS = { ahorros: PiggyBank, billeteras: Smartphone, inversiones: ChartLine, tarjetas: CreditCard };
+const ACCENTS: Record<PositionTile["key"], TileAccent> = { ahorros: "teal", billeteras: "sky", inversiones: "mix", tarjetas: "navy" };
 
 /** Resumen de posiciones financieras: tarjetas simétricas y clicables hacia su detalle. */
 export function PositionsSummary({ tiles, currency }: { tiles: PositionTile[]; currency: Currency }) {
@@ -37,6 +38,7 @@ export function PositionsSummary({ tiles, currency }: { tiles: PositionTile[]; c
               hintAccent={t.empty}
               icon={<I strokeWidth={2.2} />}
               href={t.href}
+              accent={ACCENTS[t.key]}
             />
           );
         })}

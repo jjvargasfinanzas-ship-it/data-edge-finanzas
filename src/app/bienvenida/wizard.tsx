@@ -133,7 +133,7 @@ export function Wizard({ firstName, today }: { firstName: string; today: string 
                   onClick={() => setGoal(g.value)}
                   aria-pressed={goal === g.value}
                   className={cn(
-                    "flex items-start gap-3 rounded-2xl border bg-surface p-4 text-left transition-all",
+                    "flex items-start gap-3 rounded-2xl border bg-card p-4 text-left transition-all",
                     goal === g.value ? "border-teal-500 ring-4 ring-teal-500/15" : "border-line hover:border-line-strong",
                   )}
                 >
@@ -159,7 +159,7 @@ export function Wizard({ firstName, today }: { firstName: string; today: string 
             </Field>
             <div className="mt-6 space-y-3">
               {accounts.map((a) => (
-                <div key={a.key} className="rounded-2xl border border-line bg-surface p-4">
+                <div key={a.key} className="rounded-2xl border border-card-border bg-card p-4">
                   <div className="grid gap-3 sm:grid-cols-[170px_1fr_170px_auto] sm:items-end">
                     <Field label="Tipo">
                       <Select value={a.type} onChange={(e) => update(a.key, { type: e.target.value as AccountRow["type"] })}>
@@ -226,7 +226,7 @@ export function Wizard({ firstName, today }: { firstName: string; today: string 
             <p className="mt-2 text-muted">
               Con esto proyectamos cuándo llega tu dinero. Honorarios, arriendos, comisiones o pensión los programas después en <strong>Programación</strong>.
             </p>
-            <div className="mt-6 grid gap-4 rounded-2xl border border-line bg-surface p-5 sm:grid-cols-2">
+            <div className="mt-6 grid gap-4 rounded-2xl border border-card-border bg-card p-5 sm:grid-cols-2">
               <Field label="Nombre">
                 <Input value={income.name} onChange={(e) => setIncome({ ...income, name: e.target.value })} />
               </Field>
@@ -256,7 +256,7 @@ export function Wizard({ firstName, today }: { firstName: string; today: string 
           <>
             <h1 className="font-display text-3xl font-semibold text-ink sm:text-4xl">Tus gastos fijos del mes</h1>
             <p className="mt-2 text-muted">Escribe solo los que tienes. Deja en blanco los demás.</p>
-            <div className="mt-6 divide-y divide-line rounded-2xl border border-line bg-surface">
+            <div className="mt-6 divide-y divide-line rounded-2xl border border-card-border bg-card">
               {EXPENSES.map((e, i) => (
                 <div key={e.name} className="grid grid-cols-[1fr_140px_80px] items-center gap-3 px-4 py-3 sm:grid-cols-[1fr_180px_110px]">
                   <span className="text-sm font-semibold text-ink">{e.name}</span>

@@ -30,12 +30,18 @@
   --color-line-strong: #d9e0ea;
   --color-ink: #1e2a3b;
   --color-ink-2: #465467;
-  --color-muted: #7b879a;
+  --color-muted: #66738a;
 
   /* Pastel derivados de la paleta activa (se recalculan por tema, ver abajo) */
   --color-tint: #eef8f7;
   --color-tint-2: #f1f4f9;
   --color-tint-strong: #d7f0ec;
+  --color-card: #f6fbfa;
+  --color-card-border: #e1efec;
+  --color-pastel-teal: #dcf3ef;
+  --color-pastel-navy: #e3e9f3;
+  --color-pastel-mix: #dfeef0;
+  --color-pastel-sky: #e6f7f4;
 
   --color-positive: #2a9a78;
   --color-positive-50: #eaf6f1;
@@ -51,7 +57,7 @@
   --color-event: #8b5cf6;
 
   --radius-card: 1rem;
-  --shadow-card: 0 1px 2px rgb(30 42 59 / 0.03), 0 4px 16px -10px rgb(30 42 59 / 0.08);
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.7) inset, 0 1px 2px rgb(30 42 59 / 0.03), 0 6px 18px -14px rgb(30 42 59 / 0.12);
   --shadow-hover: 0 2px 4px rgb(30 42 59 / 0.03), 0 12px 28px -14px rgb(30 42 59 / 0.18);
   --shadow-pop: 0 20px 50px -20px rgb(30 42 59 / 0.3);
 
@@ -175,7 +181,16 @@
   --color-tint: color-mix(in oklab, var(--color-teal-500) 8%, white);
   --color-tint-2: color-mix(in oklab, var(--color-navy-500) 6%, white);
   --color-tint-strong: color-mix(in oklab, var(--color-teal-500) 18%, white);
-  --color-canvas: color-mix(in oklab, var(--color-navy-500) 4%, #f7f8fa);
+  /* Capas tonales: fondo (más profundo) → tarjeta (clara, apenas tintada) → acento (pastel visible) */
+  --color-canvas: color-mix(in oklab, color-mix(in oklab, var(--color-teal-500) 35%, var(--color-navy-500)) 7%, #f3f4f6);
+  --color-line: color-mix(in oklab, var(--color-navy-500) 8%, #eef0f3);
+  --color-line-strong: color-mix(in oklab, var(--color-navy-500) 14%, #e3e7ee);
+  --color-card: color-mix(in oklab, var(--color-teal-500) 5%, #fbfcfd);
+  --color-card-border: color-mix(in oklab, var(--color-teal-500) 12%, #eef1f5);
+  --color-pastel-teal: color-mix(in oklab, var(--color-teal-500) 17%, #fafcfc);
+  --color-pastel-navy: color-mix(in oklab, var(--color-navy-500) 17%, #fbfcff);
+  --color-pastel-mix: color-mix(in oklab, color-mix(in oklab, var(--color-teal-500) 50%, var(--color-navy-500)) 15%, #fafcfd);
+  --color-pastel-sky: color-mix(in oklab, var(--color-teal-400) 11%, #fbfdfd);
 }
 
 @layer base {
@@ -214,8 +229,8 @@
 
 @utility card {
   min-width: 0;
-  background: var(--color-surface);
-  border: 1px solid var(--color-line);
+  background: var(--color-card);
+  border: 1px solid var(--color-card-border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
 }

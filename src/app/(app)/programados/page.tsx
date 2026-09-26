@@ -87,12 +87,12 @@ export default async function ProgramadosPage({ searchParams }: { searchParams: 
       />
 
       <TileGrid cols={3} className="mb-4">
-        <StatTile label="Ingresos fijos/mes" value={fixedIn} currency={currency} tone="positive" href="/programados?tipo=ingresos" />
-        <StatTile label="Gastos fijos/mes" value={fixedOut} currency={currency} href="/programados?tipo=gastos" />
-        <StatTile label="Margen" value={fixedIn - fixedOut} currency={currency} signed href="/flujo-de-caja?v=proyectado" />
+        <StatTile label="Ingresos fijos/mes" value={fixedIn} currency={currency} tone="positive" accent="teal" href="/programados?tipo=ingresos" />
+        <StatTile label="Gastos fijos/mes" value={fixedOut} currency={currency} accent="navy" href="/programados?tipo=gastos" />
+        <StatTile label="Margen" value={fixedIn - fixedOut} currency={currency} signed accent="mix" href="/flujo-de-caja?v=proyectado" />
       </TileGrid>
 
-      <nav className="mb-4 flex w-fit rounded-xl bg-surface p-1 ring-1 ring-line" aria-label="Tipo">
+      <nav className="mb-4 flex w-fit rounded-xl bg-card p-1 ring-1 ring-card-border" aria-label="Tipo">
         {(Object.keys(TABS) as (keyof typeof TABS)[]).map((k) => {
           const n = rows.filter((r) => (TABS[k].kinds as readonly string[]).includes(r.kind)).length;
           return (

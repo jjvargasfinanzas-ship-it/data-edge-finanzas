@@ -84,8 +84,8 @@ export default async function PrestamosPage() {
       ) : (
         <>
           <TileGrid cols={2} className="mb-4">
-            <StatTile label="Me deben" value={owedToMe} currency={currency} tone="positive" />
-            <StatTile label="Debo" value={iOwe} currency={currency} />
+            <StatTile label="Me deben" value={owedToMe} currency={currency} tone="positive" accent="teal" />
+            <StatTile label="Debo" value={iOwe} currency={currency} accent="navy" />
           </TileGrid>
 
           <div className="space-y-4">

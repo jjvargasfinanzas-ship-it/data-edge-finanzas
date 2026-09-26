@@ -151,17 +151,17 @@ export default async function InicioPage() {
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
         {/* ───── Columna REAL ───── */}
         <div className="min-w-0 space-y-4">
-          <Card>
-            <div className="px-4 pt-4 sm:px-5">
-              <p className="flex items-center gap-2 text-xs font-medium text-muted">
+          <Card className="overflow-hidden">
+            <div className="bg-pastel-teal px-4 pt-4 pb-3.5 sm:px-5">
+              <p className="flex items-center gap-2 text-xs font-medium text-ink-2">
                 Saldo real disponible <Badge tone="positive">Real</Badge>
               </p>
               <p className={cn("num mt-1 text-2xl leading-tight font-semibold", flow.startBalance < 0 ? "text-negative" : "text-ink")}>
                 {formatMoney(flow.startBalance, currency)}
               </p>
-              <p className="mt-0.5 text-xs text-muted">Lo que hay hoy en tus cuentas, con los movimientos ya confirmados. Toca una cuenta para ver de dónde sale.</p>
+              <p className="mt-0.5 text-xs text-ink-2/80">Lo que hay hoy en tus cuentas, con los movimientos ya confirmados. Toca una cuenta para ver de dónde sale.</p>
             </div>
-            <ul className="mt-2 divide-y divide-line border-t border-line">
+            <ul className="divide-y divide-line">
               {liquid.map((a) => (
                 <li key={a.id}>
                   <Link href={`/cuentas/${a.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-tint/70 sm:px-5">

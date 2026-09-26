@@ -55,7 +55,7 @@ export default async function ConfiguracionPage() {
             <p>Descarga todos tus movimientos en CSV (se abre en Excel).</p>
             <a
               href="/api/export/movimientos"
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-line-strong bg-surface px-4 font-semibold text-ink hover:bg-canvas"
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-card-border bg-card px-4 font-semibold text-ink hover:bg-canvas"
             >
               <Download className="size-4" /> Exportar todo
             </a>

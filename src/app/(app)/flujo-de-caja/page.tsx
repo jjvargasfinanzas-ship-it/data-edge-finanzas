@@ -31,7 +31,7 @@ export default async function FlujoPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <PageHeader title="Flujo de caja" subtitle="El real muestra lo que ya pasó. El proyectado, lo que podría pasar con lo programado." />
-      <nav className="mb-4 grid w-full max-w-md grid-cols-2 rounded-xl bg-surface p-1 ring-1 ring-line" aria-label="Tipo de flujo">
+      <nav className="mb-4 grid w-full max-w-md grid-cols-2 rounded-xl bg-card p-1 ring-1 ring-card-border" aria-label="Tipo de flujo">
         {[
           { k: "real", label: "Real", hint: "Confirmado" },
           { k: "proyectado", label: "Proyectado", hint: "Estimado" },
@@ -110,7 +110,7 @@ async function RealView({ month, today, currency }: { month: string; today: stri
 
   return (
     <div className="space-y-4">
-      <div className="flex w-fit items-center rounded-xl border border-line-strong bg-surface">
+      <div className="flex w-fit items-center rounded-xl border border-card-border bg-card">
         <Link href={`/flujo-de-caja?v=real&mes=${prev}`} className="grid size-10 place-items-center text-muted hover:text-ink" aria-label="Mes anterior">
           <ChevronLeft className="size-4" />
         </Link>
@@ -178,7 +178,7 @@ async function ProjectedView({ h, today, currency }: { h: string; today: string;
 
   return (
     <div className="space-y-4">
-      <nav className="flex w-fit rounded-xl bg-surface p-1 ring-1 ring-line" aria-label="Periodo">
+      <nav className="flex w-fit rounded-xl bg-card p-1 ring-1 ring-card-border" aria-label="Periodo">
         {HORIZONS.map(({ k, label }) => (
           <Link
             key={k}

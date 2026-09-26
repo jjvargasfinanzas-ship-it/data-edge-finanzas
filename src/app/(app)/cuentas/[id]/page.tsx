@@ -148,9 +148,9 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <div className="space-y-4">
-          <Card className="p-4 sm:p-5">
+          <Card className={cn("border-transparent p-4 sm:p-5", isCard || payable ? "bg-pastel-navy" : "bg-pastel-teal")}>
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[13px] font-semibold text-muted">{receivable ? "Me debe" : payable ? "Debo" : isCard ? "Deuda actual" : "Saldo real hoy"}</p>
+              <p className="text-[13px] font-semibold text-ink-2">{receivable ? "Me debe" : payable ? "Debo" : isCard ? "Deuda actual" : "Saldo real hoy"}</p>
               <Badge tone="positive">Real</Badge>
             </div>
             <p className={cn("num mt-1 text-2xl font-semibold whitespace-nowrap", !isCard && !loan && acc.balance < 0 && "text-negative")}>
