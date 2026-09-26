@@ -4,6 +4,7 @@ import { ArrowRight, CalendarDays, CheckCircle2, ChevronRight, Circle, TriangleA
 import { CategoryBars, type CategoryRow } from "@/components/charts/category-bars";
 import { NewAccountButton, NewPlannedButton, NewTransactionButton } from "@/components/app/open-buttons";
 import { PendingList } from "@/components/app/pending-list";
+import { PositionsSummary, type PositionTile } from "@/components/app/positions-summary";
 import { Badge, Card, EmptyState, Progress } from "@/components/ui/misc";
 import { AccountIcon } from "@/components/ui/icons";
 import { StatRows } from "@/components/ui/stat-rows";
@@ -54,6 +55,39 @@ export default async function InicioPage() {
   const cardDebt = cards.reduce((s, a) => s + toBase(Math.max(0, -a.balance), a.currency), 0);
   const owedToMe = active.filter((a) => a.type === "loan_receivable").reduce((s, a) => s + toBase(Math.max(0, a.balance), a.currency), 0);
   const iOwe = active.filter((a) => a.type === "loan_payable").reduce((s, a) => s + toBase(Math.max(0, -a.balance), a.currency), 0);
+
+  // Posiciones financieras (moneda base)
+  const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  const byTypes = (types: string[]) => active.filter((a) => types.includes(a.type));
+  const sumBase = (list: typeof active) => list.reduce((s, a) => s + toBase(a.balance, a.currency), 0);
+  const savings = byTypes(["bank_savings"]);
+  const wallets = byTypes(["digital_wallet"]);
+  const investments = byTypes(["investment"]);
+  const cardLimit = cards.reduce((s, a) => s + toBase(a.credit_limit ?? 0, a.currency), 0);
+  const cardAvailable = cards.reduce((s, a) => s + toBase(Math.max(0, (a.credit_limit ?? 0) - Math.max(0, -a.balance)), a.currency), 0);
+  const tile = (key: string, label: string, icon: PositionTile["icon"], list: typeof active, href: string): PositionTile => ({
+    key,
+    label,
+    icon,
+    value: sumBase(list),
+    hint: list.length ? count(list.length, "cuenta", "cuentas") : "Agregar",
+    href,
+    empty: !list.length,
+  });
+  const positions: PositionTile[] = [
+    tile("ahorros", "Cuentas de ahorro", "bank_savings", savings, "/cuentas?tipo=ahorros"),
+    tile("billeteras", "Billeteras digitales", "digital_wallet", wallets, "/cuentas?tipo=billeteras"),
+    tile("inversiones", "Inversiones", "investment", investments, "/cuentas?tipo=inversiones"),
+    {
+      key: "tarjetas",
+      label: "Disponible en tarjetas",
+      icon: "credit_card",
+      value: cardAvailable,
+      hint: cards.length ? `de ${formatMoney(cardLimit, currency, { compact: true })} de cupo` : "Agregar",
+      href: "/tarjetas",
+      empty: !cards.length,
+    },
+  ];
 
   // Por confirmar: lo programado cuya fecha ya llegó
   const visible = flow.occurrences.filter((o) => !(o.flow === "transfer" && o.cashEffect === 0));
@@ -113,6 +147,8 @@ export default async function InicioPage() {
           </ul>
         </Card>
       )}
+
+      <PositionsSummary tiles={positions} currency={currency} />
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
         {/* ───── Columna REAL ───── */}
