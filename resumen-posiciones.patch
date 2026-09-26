@@ -1,0 +1,280 @@
+From ba327b1d2ecc50b27ea1234b94804edae9d14251 Mon Sep 17 00:00:00 2001
+From: JJ Vargas <ingjohnvargas@gmail.com>
+Date: Fri, 25 Sep 2026 21:50:38 -0500
+Subject: [PATCH] Inicio: resumen de posiciones financieras con detalle por
+ tipo
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Nuevo componente PositionsSummary: 4 tarjetas simétricas (ahorros, billeteras, inversiones, disponible en tarjetas) con cifra que se ajusta al ancho
+- Cada tarjeta enlaza a su detalle: /cuentas?tipo=... o /tarjetas
+- Cuentas: vista filtrada por tipo con saldo total y participación por cuenta
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01988jLYD5pANiyHmY1Lv7sC
+---
+ src/app/(app)/cuentas/page.tsx           | 83 +++++++++++++++++++++++-
+ src/app/(app)/inicio/page.tsx            | 36 ++++++++++
+ src/components/app/positions-summary.tsx | 76 ++++++++++++++++++++++
+ 3 files changed, 192 insertions(+), 3 deletions(-)
+ create mode 100644 src/components/app/positions-summary.tsx
+
+diff --git a/src/app/(app)/cuentas/page.tsx b/src/app/(app)/cuentas/page.tsx
+index 3ff2772..c17c932 100644
+--- a/src/app/(app)/cuentas/page.tsx
++++ b/src/app/(app)/cuentas/page.tsx
+@@ -1,20 +1,28 @@
+ import type { Metadata } from "next";
+ import Link from "next/link";
+-import { ChevronRight, Wallet } from "lucide-react";
++import { ArrowLeft, ChevronRight, Wallet } from "lucide-react";
+ import { NewAccountButton } from "@/components/app/open-buttons";
+ import { Badge, Card, EmptyState, Money, PageHeader } from "@/components/ui/misc";
+ import { AccountIcon } from "@/components/ui/icons";
+ import { cn } from "@/components/ui/cn";
+ import { getAccounts, getContext, getRates } from "@/lib/data";
+-import { ACCOUNT_GROUPS, ACCOUNT_TYPE_LABELS } from "@/lib/constants";
++import { ACCOUNT_GROUPS, ACCOUNT_TYPE_LABELS, type AccountType } from "@/lib/constants";
+ import { convert } from "@/lib/money";
+ import { isLiquid } from "@/lib/cashflow";
+ 
+ export const metadata: Metadata = { title: "Cuentas" };
+ 
+-export default async function CuentasPage({ searchParams }: { searchParams: Promise<{ archivadas?: string }> }) {
++/** Filtros por tipo, usados desde el resumen de posiciones de Inicio. */
++const TYPE_FILTERS: Record<string, { title: string; subtitle: string; type: AccountType; empty: string }> = {
++  ahorros: { title: "Cuentas de ahorro", subtitle: "Detalle de tus cuentas de ahorro y sus saldos.", type: "bank_savings", empty: "No tienes cuentas de ahorro" },
++  billeteras: { title: "Billeteras digitales", subtitle: "Nequi, Daviplata y demás billeteras con sus saldos.", type: "digital_wallet", empty: "No tienes billeteras digitales" },
++  inversiones: { title: "Inversiones", subtitle: "Tus cuentas de inversión y su valor actual.", type: "investment", empty: "No tienes inversiones registradas" },
++};
++
++export default async function CuentasPage({ searchParams }: { searchParams: Promise<{ archivadas?: string; tipo?: string }> }) {
+   const sp = await searchParams;
+   const showArchived = sp.archivadas === "1";
++  const filter = sp.tipo ? TYPE_FILTERS[sp.tipo] : undefined;
+   const [{ currency }, accounts, rates] = await Promise.all([getContext(), getAccounts(), getRates()]);
+   const visible = accounts.filter((a) => showArchived || !a.is_archived);
+   const active = accounts.filter((a) => !a.is_archived);
+@@ -24,6 +32,75 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
+   const liabilities = active.filter((a) => a.include_in_net_worth && a.balance < 0).reduce((s, a) => s - base(a), 0);
+   const archivedCount = accounts.length - active.length;
+ 
++  if (filter) {
++    const items = active.filter((a) => a.type === filter.type).sort((a, b) => base(b) - base(a));
++    const total = items.reduce((s, a) => s + base(a), 0);
++    return (
++      <>
++        <Link href="/inicio" className="mb-2 inline-flex items-center gap-1 text-sm font-semibold text-teal-700 hover:underline">
++          <ArrowLeft className="size-4" /> Inicio
++        </Link>
++        <PageHeader
++          title={filter.title}
++          subtitle={filter.subtitle}
++          actions={<NewAccountButton initial={{ type: filter.type }}>Agregar</NewAccountButton>}
++        />
++        {items.length === 0 ? (
++          <Card>
++            <EmptyState
++              icon={<Wallet className="size-7" />}
++              title={filter.empty}
++              action={<NewAccountButton initial={{ type: filter.type }}>Agregar {ACCOUNT_TYPE_LABELS[filter.type].toLowerCase()}</NewAccountButton>}
++            />
++          </Card>
++        ) : (
++          <>
++            <Card className="mb-4 flex items-center justify-between gap-3 px-5 py-4">
++              <div className="min-w-0">
++                <p className="text-[13px] font-semibold text-muted">Saldo total</p>
++                <p className="text-xs text-muted">
++                  {items.length} {items.length === 1 ? "cuenta" : "cuentas"}
++                  {items.some((a) => a.currency !== currency) && ` · convertido a ${currency}`}
++                </p>
++              </div>
++              <Money value={total} currency={currency} className={cn("shrink-0 text-2xl font-bold", total < 0 ? "text-negative" : "text-ink")} />
++            </Card>
++            <Card>
++              <ul className="divide-y divide-line">
++                {items.map((a) => {
++                  const share = total > 0 ? Math.max(0, (base(a) / total) * 100) : 0;
++                  return (
++                    <li key={a.id}>
++                      <Link href={`/cuentas/${a.id}`} className="flex items-center gap-3 px-5 py-4 hover:bg-canvas/60">
++                        <AccountIcon type={a.type} />
++                        <div className="min-w-0 flex-1">
++                          <p className="flex items-center gap-2 truncate text-sm font-bold text-ink">
++                            {a.name}
++                            {a.currency !== "COP" && <Badge tone="brand">{a.currency}</Badge>}
++                          </p>
++                          <p className="truncate text-xs text-muted">
++                            {[a.institution, total > 0 ? `${share.toFixed(0)}% del total` : null].filter(Boolean).join(" · ") || ACCOUNT_TYPE_LABELS[a.type]}
++                          </p>
++                        </div>
++                        <div className="text-right">
++                          <Money value={a.balance} currency={a.currency} className={cn("text-[15px] font-bold whitespace-nowrap", a.balance < 0 ? "text-negative" : "text-ink")} />
++                          {a.currency !== currency && (
++                            <p className="num text-[11px] text-muted">≈ <Money value={base(a)} currency={currency} /></p>
++                          )}
++                        </div>
++                        <ChevronRight className="size-4 text-muted" />
++                      </Link>
++                    </li>
++                  );
++                })}
++              </ul>
++            </Card>
++          </>
++        )}
++      </>
++    );
++  }
++
+   return (
+     <>
+       <PageHeader
+diff --git a/src/app/(app)/inicio/page.tsx b/src/app/(app)/inicio/page.tsx
+index 6db3c0b..86d1d79 100644
+--- a/src/app/(app)/inicio/page.tsx
++++ b/src/app/(app)/inicio/page.tsx
+@@ -4,6 +4,7 @@ import { ArrowRight, CalendarDays, CheckCircle2, ChevronRight, Circle, TriangleA
+ import { CategoryBars, type CategoryRow } from "@/components/charts/category-bars";
+ import { NewAccountButton, NewPlannedButton, NewTransactionButton } from "@/components/app/open-buttons";
+ import { PendingList } from "@/components/app/pending-list";
++import { PositionsSummary, type PositionTile } from "@/components/app/positions-summary";
+ import { Badge, Card, EmptyState, Progress } from "@/components/ui/misc";
+ import { AccountIcon } from "@/components/ui/icons";
+ import { StatRows } from "@/components/ui/stat-rows";
+@@ -55,6 +56,39 @@ export default async function InicioPage() {
+   const owedToMe = active.filter((a) => a.type === "loan_receivable").reduce((s, a) => s + toBase(Math.max(0, a.balance), a.currency), 0);
+   const iOwe = active.filter((a) => a.type === "loan_payable").reduce((s, a) => s + toBase(Math.max(0, -a.balance), a.currency), 0);
+ 
++  // Posiciones financieras (moneda base)
++  const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
++  const byTypes = (types: string[]) => active.filter((a) => types.includes(a.type));
++  const sumBase = (list: typeof active) => list.reduce((s, a) => s + toBase(a.balance, a.currency), 0);
++  const savings = byTypes(["bank_savings"]);
++  const wallets = byTypes(["digital_wallet"]);
++  const investments = byTypes(["investment"]);
++  const cardLimit = cards.reduce((s, a) => s + toBase(a.credit_limit ?? 0, a.currency), 0);
++  const cardAvailable = cards.reduce((s, a) => s + toBase(Math.max(0, (a.credit_limit ?? 0) - Math.max(0, -a.balance)), a.currency), 0);
++  const tile = (key: string, label: string, icon: PositionTile["icon"], list: typeof active, href: string): PositionTile => ({
++    key,
++    label,
++    icon,
++    value: sumBase(list),
++    hint: list.length ? count(list.length, "cuenta", "cuentas") : "Agregar",
++    href,
++    empty: !list.length,
++  });
++  const positions: PositionTile[] = [
++    tile("ahorros", "Cuentas de ahorro", "bank_savings", savings, "/cuentas?tipo=ahorros"),
++    tile("billeteras", "Billeteras digitales", "digital_wallet", wallets, "/cuentas?tipo=billeteras"),
++    tile("inversiones", "Inversiones", "investment", investments, "/cuentas?tipo=inversiones"),
++    {
++      key: "tarjetas",
++      label: "Disponible en tarjetas",
++      icon: "credit_card",
++      value: cardAvailable,
++      hint: cards.length ? `de ${formatMoney(cardLimit, currency, { compact: true })} de cupo` : "Agregar",
++      href: "/tarjetas",
++      empty: !cards.length,
++    },
++  ];
++
+   // Por confirmar: lo programado cuya fecha ya llegó
+   const visible = flow.occurrences.filter((o) => !(o.flow === "transfer" && o.cashEffect === 0));
+   const toConfirm = visible.filter((o) => o.dueDate <= today && o.flow !== "card_estimate");
+@@ -114,6 +148,8 @@ export default async function InicioPage() {
+         </Card>
+       )}
+ 
++      <PositionsSummary tiles={positions} currency={currency} />
++
+       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+         {/* ───── Columna REAL ───── */}
+         <div className="min-w-0 space-y-4">
+diff --git a/src/components/app/positions-summary.tsx b/src/components/app/positions-summary.tsx
+new file mode 100644
+index 0000000..220d9c2
+--- /dev/null
++++ b/src/components/app/positions-summary.tsx
+@@ -0,0 +1,76 @@
++import Link from "next/link";
++import { ChevronRight } from "lucide-react";
++import { AccountIcon } from "@/components/ui/icons";
++import { Badge } from "@/components/ui/misc";
++import { cn } from "@/components/ui/cn";
++import { formatMoney, type Currency } from "@/lib/money";
++import type { AccountType } from "@/lib/constants";
++
++export interface PositionTile {
++  key: string;
++  label: string;
++  /** Tipo de cuenta que define el ícono de la tarjeta. */
++  icon: AccountType;
++  value: number;
++  /** Línea secundaria: nº de cuentas, cupo total, etc. */
++  hint: string;
++  href: string;
++  empty?: boolean;
++}
++
++/**
++ * Ajusta el tamaño de la cifra al ancho real de la tarjeta (container query units),
++ * para que nunca se corte: ~0,62em por carácter en la fuente numérica.
++ * Tope en 26px (igual que "Disponible") y piso en 14px; si aun así no cabe, se usa formato compacto.
++ */
++function FitMoney({ value, currency }: { value: number; currency: Currency }) {
++  const full = formatMoney(value, currency);
++  const text = full.length > 18 ? formatMoney(value, currency, { compact: true }) : full;
++  const size = `clamp(14px, calc(100cqi / ${(text.length * 0.62).toFixed(2)}), 26px)`;
++  return (
++    <p
++      className={cn("num mt-1 overflow-hidden leading-tight font-bold whitespace-nowrap text-ellipsis", value < 0 ? "text-negative" : "text-ink")}
++      style={{ fontSize: size }}
++      title={full}
++    >
++      {text}
++    </p>
++  );
++}
++
++/** Resumen de posiciones financieras: tarjetas simétricas y clicables hacia su detalle. */
++export function PositionsSummary({ tiles, currency }: { tiles: PositionTile[]; currency: Currency }) {
++  return (
++    <section aria-label="Posiciones financieras">
++      <div className="mb-2 flex items-baseline justify-between px-1">
++        <h2 className="flex items-center gap-2 text-[15px] font-bold text-ink">
++          Posiciones financieras <Badge tone="positive">Real</Badge>
++        </h2>
++        <Link href="/cuentas" className="text-sm font-bold text-teal-700 hover:underline">
++          Cuentas
++        </Link>
++      </div>
++      <ul className="grid auto-rows-fr grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
++        {tiles.map((t) => (
++          <li key={t.key} className="min-w-0">
++            <Link
++              href={t.href}
++              aria-label={`${t.label}: ${formatMoney(t.value, currency)}. Ver detalle`}
++              className="card group flex h-full min-h-[132px] flex-col p-4 transition hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none sm:p-5"
++            >
++              <div className="flex items-center gap-2">
++                <AccountIcon type={t.icon} className="size-8 rounded-lg [&_svg]:size-4" />
++                <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-muted">{t.label}</p>
++                <ChevronRight className="size-4 shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-teal-700" />
++              </div>
++              <div className="@container mt-auto pt-3">
++                <FitMoney value={t.value} currency={currency} />
++                <p className={cn("mt-0.5 truncate text-xs", t.empty ? "font-semibold text-teal-700" : "text-muted")}>{t.hint}</p>
++              </div>
++            </Link>
++          </li>
++        ))}
++      </ul>
++    </section>
++  );
++}
+-- 
+2.43.0
+
