@@ -21,14 +21,17 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
 
   let q = supabase
     .from("transactions")
-    .select("id, kind, date, amount, account_id, to_account_id, to_amount, category_id, description, notes, planned_item_id, planned_date", { count: "exact" })
+    .select("id, kind, date, amount, account_id, to_account_id, to_amount, category_id, description, notes, planned_item_id, planned_date, obligation_id", { count: "exact" })
     .gte("date", from)
     .lte("date", to)
     .order("date", { ascending: false })
     .order("created_at", { ascending: false })
     .range((page - 1) * PAGE, page * PAGE - 1);
 
-  if (sp.tipo === "income" || sp.tipo === "expense" || sp.tipo === "transfer") q = q.eq("kind", sp.tipo);
+  // Los pagos de obligaciones no son gastos: tienen su propio filtro.
+  if (sp.tipo === "income" || sp.tipo === "transfer") q = q.eq("kind", sp.tipo);
+  if (sp.tipo === "expense") q = q.eq("kind", "expense").is("obligation_id", null);
+  if (sp.tipo === "obligation") q = q.not("obligation_id", "is", null);
   if (sp.cuenta && /^[0-9a-f-]{36}$/.test(sp.cuenta)) q = q.or(`account_id.eq.${sp.cuenta},to_account_id.eq.${sp.cuenta}`);
   if (sp.categoria && /^[0-9a-f-]{36}$/.test(sp.categoria)) {
     const cats = await getCategories();

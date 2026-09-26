@@ -157,6 +157,7 @@ export async function getMonthTotals(from: ISODate, to: ISODate) {
     .from("transactions")
     .select("kind, amount, account_id, category_id, date")
     .in("kind", ["income", "expense"])
+    .is("obligation_id", null)
     .gte("date", from)
     .lte("date", to)
     .limit(10000);
@@ -186,7 +187,7 @@ export function monthRange(month: string) {
  */
 export const getPeriodPlan = cache(async (from: ISODate, to: ISODate) => {
   const { supabase, today, currency } = await getContext();
-  const [planned, settlements, accounts, rates, unplannedRes] = await Promise.all([
+  const [allPlanned, settlements, accounts, rates, unplannedRes, oblPlanned] = await Promise.all([
     getPlanned(),
     getSettlements(from, to),
     getAccounts(),
@@ -196,10 +197,14 @@ export const getPeriodPlan = cache(async (from: ISODate, to: ISODate) => {
       .select("kind, amount, account_id")
       .in("kind", ["income", "expense"])
       .is("planned_item_id", null)
+      .is("obligation_id", null)
       .gte("date", from)
       .lte("date", to)
       .limit(10000),
+    getObligationPlannedIds(),
   ]);
+  // Las cuotas de obligaciones no son gastos: salen del programado vs. real.
+  const planned = allPlanned.filter((p) => !oblPlanned.has(p.id));
   const accCur = new Map(accounts.map((a) => [a.id, a.currency]));
   const rows = buildPlanRows({ planned, settlements, from, to, today });
   const toBase = (v: number, r: { accountId: string }) => convert(v, accCur.get(r.accountId) ?? currency, currency, rates);
@@ -236,7 +241,7 @@ export type ObligationPayment = {
 /** Obligaciones con su cronograma, pagos aplicados y estado. */
 export const getObligations = cache(async () => {
   const { supabase, today } = await getContext();
-  const [{ data: rows }, { data: pays }, accounts, rates] = await Promise.all([
+  const [{ data: rows }, { data: pays }, accounts, rates, classes] = await Promise.all([
     supabase.from("obligations").select("*").order("first_due_date"),
     supabase
       .from("transactions")
@@ -246,7 +251,9 @@ export const getObligations = cache(async () => {
       .limit(5000),
     getAccounts(),
     getRates(),
+    getObligationClasses(),
   ]);
+  const className = new Map(classes.map((c) => [c.id, c.name]));
   const accCur = new Map(accounts.map((a) => [a.id, a.currency]));
   const obligations = rows ?? [];
   const oblCur = new Map(obligations.map((o) => [o.id, o.currency as Currency]));
@@ -272,7 +279,8 @@ export const getObligations = cache(async () => {
       {
         id: o.id,
         creditor: o.creditor,
-        creditor_type: o.creditor_type,
+        class_id: o.class_id,
+        class_name: o.class_id ? (className.get(o.class_id) ?? null) : null,
         kind: o.kind,
         concept: o.concept,
         currency: o.currency as Currency,
@@ -290,4 +298,20 @@ export const getObligations = cache(async () => {
     return { row: o, summary, payments: list };
   });
   return { items, rates };
+});
+
+export type ObligationClass = Tables<"obligation_categories">;
+
+/** Subcategorías de "Obligaciones financieras" (tipo de acreedor). */
+export const getObligationClasses = cache(async (): Promise<ObligationClass[]> => {
+  const { supabase } = await getContext();
+  const { data } = await supabase.from("obligation_categories").select("*").order("sort_order").order("name");
+  return data ?? [];
+});
+
+/** Programados que llevan cuotas de obligaciones (no son gastos). */
+export const getObligationPlannedIds = cache(async (): Promise<Set<string>> => {
+  const { supabase } = await getContext();
+  const { data } = await supabase.from("obligations").select("planned_item_id").not("planned_item_id", "is", null);
+  return new Set((data ?? []).map((r) => r.planned_item_id as string));
 });

@@ -1,21 +1,26 @@
 import type { Metadata } from "next";
 import { Download, ExternalLink } from "lucide-react";
 import { Card, CardHeader, PageHeader } from "@/components/ui/misc";
-import { getCategories, getContext } from "@/lib/data";
+import { getCategories, getContext, getObligationClasses } from "@/lib/data";
 import { formatMedium } from "@/lib/dates";
 import { ProfileForm } from "./profile-form";
 import { CategoriesManager } from "./categories";
 import { RatesManager } from "./rates";
+import { ObligationClassesManager } from "./obligation-classes";
 import { ThemePicker } from "./theme-picker";
 
 export const metadata: Metadata = { title: "Configuración" };
 
 export default async function ConfiguracionPage() {
   const { supabase, profile, today } = await getContext();
-  const [categories, ratesRes] = await Promise.all([
+  const [categories, ratesRes, classes, oblRes] = await Promise.all([
     getCategories(),
     supabase.from("exchange_rates").select("id, base, rate, rate_date, source, user_id").order("rate_date", { ascending: false }).limit(60),
+    getObligationClasses(),
+    supabase.from("obligations").select("class_id"),
   ]);
+  const classCount = new Map<string, number>();
+  for (const o of oblRes.data ?? []) if (o.class_id) classCount.set(o.class_id, (classCount.get(o.class_id) ?? 0) + 1);
 
   return (
     <>
@@ -46,6 +51,13 @@ export default async function ConfiguracionPage() {
           <CardHeader title="Categorías" subtitle="Personaliza categorías y subcategorías. Archivar no borra el historial." />
           <div className="p-5">
             <CategoriesManager categories={categories} />
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title="Préstamos y obligaciones" subtitle="Clasificación de tus acreedores. Se usa para organizar y analizar el módulo de Obligaciones." />
+          <div className="p-5">
+            <ObligationClassesManager items={classes.map((c) => ({ id: c.id, name: c.name, is_archived: c.is_archived, count: classCount.get(c.id) ?? 0 }))} />
           </div>
         </Card>
 

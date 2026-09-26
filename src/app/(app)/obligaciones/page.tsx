@@ -13,9 +13,9 @@ import { byPriority, HORIZONS, loadObligations } from "./load";
 export const metadata: Metadata = { title: "Obligaciones" };
 
 const DIST = {
+  clase: { label: "Clasificación", param: "clase" },
   acreedor: { label: "Acreedor", param: "acreedor" },
   tipo: { label: "Tipo", param: "tipo" },
-  clase: { label: "Persona / entidad", param: "clase" },
 } as const;
 type DistKey = keyof typeof DIST;
 
@@ -34,7 +34,7 @@ function SectionTitle({ title, hint, action }: { title: string; hint?: string; a
 export default async function ObligacionesPage({ searchParams }: { searchParams: Promise<{ horizonte?: string; dist?: string }> }) {
   const sp = await searchParams;
   const horizon = HORIZONS.find((h) => String(h) === sp.horizonte) ?? 90;
-  const dist: DistKey = sp.dist && sp.dist in DIST ? (sp.dist as DistKey) : "acreedor";
+  const dist: DistKey = sp.dist && sp.dist in DIST ? (sp.dist as DistKey) : "clase";
   const { today, currency, summaries, portfolio: p } = await loadObligations(horizon);
   /** Enlace a esta pantalla conservando filtros y omitiendo los valores por defecto. */
   const href = (next: { horizonte?: number; dist?: DistKey }) => {
@@ -42,7 +42,7 @@ export default async function ObligacionesPage({ searchParams }: { searchParams:
     const d = next.dist ?? dist;
     const u = new URLSearchParams();
     if (h !== 90) u.set("horizonte", String(h));
-    if (d !== "acreedor") u.set("dist", d);
+    if (d !== "clase") u.set("dist", d);
     const s = u.toString();
     return `/obligaciones${s ? `?${s}` : ""}`;
   };
@@ -63,7 +63,7 @@ export default async function ObligacionesPage({ searchParams }: { searchParams:
     );
 
   const open = summaries.filter((s) => s.state !== "paid" && s.state !== "cancelled").sort(byPriority);
-  const rows = dist === "acreedor" ? p.byCreditor : dist === "tipo" ? p.byKind : p.byCreditorType;
+  const rows = dist === "acreedor" ? p.byCreditor : dist === "tipo" ? p.byKind : p.byClass;
   const distTotal = rows.reduce((s, r) => s + r.pending, 0);
   const top = p.byCreditor.slice(0, 3);
   const bottom = p.byCreditor.length > 3 ? [...p.byCreditor].reverse().slice(0, 3) : [];
@@ -172,7 +172,7 @@ export default async function ObligacionesPage({ searchParams }: { searchParams:
       <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
         {/* Distribución */}
         <Card className="flex flex-col">
-          <SectionTitle title="Distribución de la deuda" hint="Saldo pendiente agrupado." />
+          <SectionTitle title="Distribución de la deuda" hint="Obligaciones financieras: saldo pendiente agrupado." />
           <div className="px-4 pt-3 sm:px-5">
             <nav className="grid grid-cols-3 rounded-xl bg-canvas p-0.5 ring-1 ring-card-border" aria-label="Agrupar por">
               {(Object.keys(DIST) as DistKey[]).map((k) => (

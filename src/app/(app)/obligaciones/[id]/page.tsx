@@ -9,7 +9,7 @@ import { cn } from "@/components/ui/cn";
 import { getAccounts, getContext, getObligations } from "@/lib/data";
 import { formatMedium, formatShort } from "@/lib/dates";
 import { formatMoney, formatPct, type Currency } from "@/lib/money";
-import { CREDITOR_TYPE_LABELS, OBLIGATION_KIND_LABELS, type InstallmentStatus } from "@/lib/obligations";
+import { OBLIGATION_KIND_LABELS, UNCLASSIFIED, type InstallmentStatus } from "@/lib/obligations";
 import { FREQUENCY_LABELS } from "@/lib/recurrence";
 import { DeletePayment, ObligationActions } from "./actions";
 
@@ -34,7 +34,7 @@ export default async function ObligacionPage({ params }: { params: Promise<{ id:
   const accName = new Map(accounts.map((a) => [a.id, a.name]));
   const interest = s.totalToPay - Number(o.original_amount);
   const next = s.next;
-  const creditorType = o.creditor_type === "person" ? "person" : "entity";
+  const className = s.obligation.class_name ?? UNCLASSIFIED;
 
   return (
     <div className="space-y-4">
@@ -49,7 +49,7 @@ export default async function ObligacionPage({ params }: { params: Promise<{ id:
             <StateBadge state={s.state} />
           </div>
           <p className="mt-0.5 text-xs text-muted sm:text-[13px]">
-            {o.concept} · {OBLIGATION_KIND_LABELS[o.kind]} · {CREDITOR_TYPE_LABELS[creditorType]}
+            {o.concept} · {className} · {OBLIGATION_KIND_LABELS[o.kind]}
           </p>
         </div>
         <ObligationActions
@@ -58,7 +58,7 @@ export default async function ObligacionPage({ params }: { params: Promise<{ id:
           edit={{
             id: o.id,
             creditor: o.creditor,
-            creditor_type: creditorType,
+            class_id: o.class_id,
             kind: o.kind,
             concept: o.concept,
             currency: cur,
@@ -213,7 +213,8 @@ export default async function ObligacionPage({ params }: { params: Promise<{ id:
             <h2 className="px-4 pt-4 text-sm font-semibold text-ink sm:px-5">Información</h2>
             <dl className="mt-2 divide-y divide-line text-sm">
               {[
-                ["Acreedor", `${o.creditor} (${CREDITOR_TYPE_LABELS[creditorType].toLowerCase()})`],
+                ["Acreedor", o.creditor],
+                ["Clasificación", `Obligaciones financieras › ${className}`],
                 ["Concepto", o.concept],
                 ["Tipo", OBLIGATION_KIND_LABELS[o.kind]],
                 ["Periodicidad", s.schedule.length > 1 ? FREQUENCY_LABELS[o.frequency] : "Pago único"],

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getContext } from "@/lib/data";
 import { formatMedium, isValidISODate } from "@/lib/dates";
 import { parseAmountInput } from "@/lib/money";
+import { THEME_IDS } from "@/lib/themes";
 import { dbError, done, fail, optStr, str, zodFail } from "./helpers";
 import type { ActionState } from "./types";
 
@@ -158,11 +159,15 @@ export async function setOccurrenceStatus(
 }
 
 export async function updateTheme(theme: string): Promise<ActionState> {
-  const parsed = z.enum(["data-edge", "rosado", "clasico"]).safeParse(theme);
+  const parsed = z.enum(THEME_IDS).safeParse(theme);
   if (!parsed.success) return fail("Paleta no válida");
   const { supabase, userId } = await getContext();
-  const { error } = await supabase.from("profiles").update({ theme: parsed.data }).eq("id", userId);
-  return error ? dbError(error) : done("Paleta aplicada");
+  const { data, error } = await supabase.from("profiles").update({ theme: parsed.data }).eq("id", userId).select("theme").single();
+  if (error?.code === "23514")
+    return fail("Tu base de datos aún no acepta esta paleta. Ejecuta la actualización de Supabase (migración de obligaciones y paletas).");
+  if (error) return dbError(error);
+  if (data?.theme !== parsed.data) return fail("No se pudo guardar la paleta. Intenta de nuevo.");
+  return done("Paleta guardada");
 }
 
 export async function deleteTransaction(id: string): Promise<ActionState> {

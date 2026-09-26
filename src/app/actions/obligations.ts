@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getContext, getObligations } from "@/lib/data";
 import { isValidISODate } from "@/lib/dates";
 import { parseAmountInput } from "@/lib/money";
-import { installmentAmounts, installmentDates, type ObligationKind } from "@/lib/obligations";
+import { installmentAmounts, installmentDates } from "@/lib/obligations";
 import { dbError, done, fail, optStr, str, zodFail } from "./helpers";
 import type { ActionState } from "./types";
 
@@ -19,24 +19,10 @@ const amountOf = (fd: FormData, k: string) => {
   return raw ? parseAmountInput(raw) : undefined;
 };
 
-/** Categoría de gasto sugerida según el tipo de obligación (categorías por defecto). */
-const CATEGORY_BY_KIND: Record<ObligationKind, string> = {
-  bank_loan: "Deudas",
-  mortgage: "Vivienda",
-  vehicle: "Deudas",
-  personal: "Deudas",
-  tax: "Impuestos",
-  service: "Servicios",
-  education: "Educación",
-  health: "Salud",
-  rent: "Vivienda",
-  other: "Deudas",
-};
-
 const obligationSchema = z
   .object({
     creditor: z.string().min(1, "¿A quién le debes?").max(80),
-    creditor_type: z.enum(["person", "entity"]),
+    class_id: z.uuid("Elige la clasificación"),
     kind: z.enum(kinds),
     concept: z.string().min(1, "Escribe el concepto").max(120),
     currency: z.enum(["COP", "USD", "EUR", "MXN", "GBP"]),
@@ -56,7 +42,7 @@ type ObligationValues = z.output<typeof obligationSchema>;
 /** Crea, actualiza o quita el programado que lleva las cuotas al flujo de caja y al calendario. */
 async function syncPlanned(
   supabase: Awaited<ReturnType<typeof getContext>>["supabase"],
-  v: ObligationValues & { status: string; category_id: string | null },
+  v: ObligationValues & { status: string },
   plannedId: string | null,
 ): Promise<string | null> {
   if (!v.account_id) {
@@ -71,7 +57,8 @@ async function syncPlanned(
     amount: amounts[0],
     account_id: v.account_id,
     to_account_id: null,
-    category_id: v.category_id,
+    // Las cuotas de una obligación no son un gasto: sin categoría de gasto.
+    category_id: null,
     frequency: v.installments === 1 ? ("once" as const) : v.frequency,
     start_date: dates[0],
     end_date: v.installments === 1 ? null : dates[dates.length - 1],
@@ -90,7 +77,7 @@ export async function saveObligation(_: ActionState, fd: FormData): Promise<Acti
   const rate = str(fd, "interest_rate").replace(",", ".");
   const parsed = obligationSchema.safeParse({
     creditor: str(fd, "creditor"),
-    creditor_type: str(fd, "creditor_type") || "entity",
+    class_id: str(fd, "class_id"),
     kind: str(fd, "kind") || "other",
     concept: str(fd, "concept"),
     currency: str(fd, "currency") || "COP",
@@ -116,28 +103,24 @@ export async function saveObligation(_: ActionState, fd: FormData): Promise<Acti
       return fail("La cuenta de pago debe estar en la misma moneda de la obligación.", { account_id: `Esta cuenta está en ${acc.currency}` });
   }
 
-  let current: { planned_item_id: string | null; status: string; category_id: string | null } | null = null;
+  const { data: cls } = await supabase.from("obligation_categories").select("name").eq("id", v.class_id).maybeSingle();
+  if (!cls) return fail("La clasificación no es válida.", { class_id: "Elige otra clasificación" });
+
+  let current: { planned_item_id: string | null; status: string } | null = null;
   if (id) {
-    const { data } = await supabase.from("obligations").select("planned_item_id, status, category_id").eq("id", id).single();
+    const { data } = await supabase.from("obligations").select("planned_item_id, status").eq("id", id).single();
     if (!data) return fail("Obligación no encontrada");
     current = data;
   }
 
-  let categoryId = current?.category_id ?? null;
-  if (!categoryId) {
-    const { data: cat } = await supabase
-      .from("categories")
-      .select("id")
-      .eq("kind", "expense")
-      .is("parent_id", null)
-      .eq("name", CATEGORY_BY_KIND[v.kind])
-      .maybeSingle();
-    categoryId = cat?.id ?? null;
-  }
-
   const status = current?.status ?? "active";
-  const plannedId = await syncPlanned(supabase, { ...v, status, category_id: categoryId }, current?.planned_item_id ?? null);
-  const row = { ...v, category_id: categoryId, planned_item_id: plannedId };
+  const plannedId = await syncPlanned(supabase, { ...v, status }, current?.planned_item_id ?? null);
+  const row = {
+    ...v,
+    creditor_type: cls.name === "Personas naturales" ? "person" : "entity",
+    category_id: null,
+    planned_item_id: plannedId,
+  };
 
   const { error } = id
     ? await supabase.from("obligations").update(row).eq("id", id)
@@ -195,10 +178,11 @@ export async function registerObligationPayment(_: ActionState, fd: FormData): P
   const { row, summary } = item;
   const next = summary.next;
   const { error } = await supabase.from("transactions").insert({
+    // Sale de la cuenta (flujo real), pero no es un gasto: sin categoría de gasto.
     kind: "expense",
     amount: v.amount,
     account_id: v.account_id,
-    category_id: row.category_id,
+    category_id: null,
     date: v.date,
     description: `${row.creditor} · ${row.concept}${next ? ` (cuota ${next.n}/${summary.schedule.length})` : ""}`.slice(0, 140),
     notes: v.notes,
@@ -210,4 +194,26 @@ export async function registerObligationPayment(_: ActionState, fd: FormData): P
 
   const remaining = summary.pending - v.amount;
   return done(remaining <= 0.005 ? `¡Pagaste por completo ${row.concept}!` : "Pago registrado. Saldo y flujo actualizados.");
+}
+
+// ------------------------------------------------------------------
+// Clasificación: subcategorías de "Obligaciones financieras"
+// ------------------------------------------------------------------
+export async function saveObligationClass(_: ActionState, fd: FormData): Promise<ActionState> {
+  const parsed = z.object({ name: z.string().min(1, "Escribe un nombre").max(60) }).safeParse({ name: str(fd, "name") });
+  if (!parsed.success) return zodFail(parsed.error);
+  const { supabase } = await getContext();
+  const id = optStr(fd, "id");
+  const { error } = id
+    ? await supabase.from("obligation_categories").update(parsed.data).eq("id", id)
+    : await supabase.from("obligation_categories").insert({ ...parsed.data, sort_order: 50 });
+  if (error) return dbError(error);
+  return done(id ? "Clasificación actualizada" : "Clasificación creada");
+}
+
+export async function setObligationClassArchived(id: string, archived: boolean): Promise<ActionState> {
+  if (!uuid.safeParse(id).success) return fail("Clasificación no válida");
+  const { supabase } = await getContext();
+  const { error } = await supabase.from("obligation_categories").update({ is_archived: archived }).eq("id", id);
+  return error ? dbError(error) : done(archived ? "Clasificación archivada" : "Clasificación restaurada");
 }

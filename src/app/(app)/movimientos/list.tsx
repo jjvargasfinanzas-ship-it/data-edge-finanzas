@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ArrowLeftRight, CalendarClock, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeftRight, CalendarClock, Pencil, ReceiptText, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { deleteTransaction } from "@/app/actions/finance";
 import { useAppData } from "@/components/app/app-data";
 import { cn } from "@/components/ui/cn";
@@ -24,6 +25,7 @@ export interface TxRow {
   notes: string | null;
   planned_item_id: string | null;
   planned_date: string | null;
+  obligation_id: string | null;
   currency: Currency;
   accountName: string;
   toAccountName: string | null;
@@ -34,6 +36,7 @@ export interface TxRow {
 
 export function TransactionList({ rows, page, pages, count }: { rows: TxRow[]; page: number; pages: number; count: number }) {
   const { openTransaction } = useAppData();
+  const router = useRouter();
   const path = usePathname();
   const sp = useSearchParams();
   const groups = new Map<string, TxRow[]>();
@@ -58,9 +61,15 @@ export function TransactionList({ rows, page, pages, count }: { rows: TxRow[]; p
             {items.map((t) => {
               const isIn = t.kind === "income";
               const isTr = t.kind === "transfer";
+              const isObl = !!t.obligation_id;
+              const open = () => (isObl ? router.push(`/obligaciones/${t.obligation_id}`) : openTransaction({ ...t }));
               return (
                 <li key={t.id} className="group relative flex items-center gap-3 px-4 py-2.5 hover:bg-tint/70 sm:px-5 sm:py-3">
-                  {isTr ? (
+                  {isObl ? (
+                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-pastel-navy text-navy-700">
+                      <ReceiptText className="size-[18px]" />
+                    </span>
+                  ) : isTr ? (
                     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-navy-900/5 text-navy-700">
                       <ArrowLeftRight className="size-[18px]" />
                     </span>
@@ -69,7 +78,7 @@ export function TransactionList({ rows, page, pages, count }: { rows: TxRow[]; p
                   )}
                   <button
                     type="button"
-                    onClick={() => openTransaction({ ...t })}
+                    onClick={open}
                     className="min-w-0 flex-1 text-left after:absolute after:inset-0 sm:after:hidden"
                     aria-label={`Editar ${t.description ?? t.categoryName ?? "movimiento"}`}
                   >
@@ -78,7 +87,11 @@ export function TransactionList({ rows, page, pages, count }: { rows: TxRow[]; p
                       {t.planned_item_id && <CalendarClock className="size-3.5 shrink-0 text-teal-600" aria-label="De un programado" />}
                     </p>
                     <p className="truncate text-xs text-muted">
-                      {isTr ? `${t.accountName} → ${t.toAccountName}` : [t.description ? t.categoryName : null, t.accountName].filter(Boolean).join(" · ")}
+                      {isObl
+                        ? `Pago de obligación · ${t.accountName}`
+                        : isTr
+                          ? `${t.accountName} → ${t.toAccountName}`
+                          : [t.description ? t.categoryName : null, t.accountName].filter(Boolean).join(" · ")}
                     </p>
                   </button>
                   <span className={cn("num shrink-0 text-sm font-semibold", isIn ? "text-positive" : isTr ? "text-ink-2" : "text-ink")}>
@@ -88,9 +101,9 @@ export function TransactionList({ rows, page, pages, count }: { rows: TxRow[]; p
                   <div className="hidden shrink-0 items-center gap-0.5 sm:flex sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
                     <button
                       type="button"
-                      onClick={() => openTransaction({ ...t })}
+                      onClick={open}
                       className="grid size-8 place-items-center rounded-lg text-muted hover:bg-surface hover:text-ink"
-                      aria-label="Editar"
+                      aria-label={isObl ? "Ver obligación" : "Editar"}
                     >
                       <Pencil className="size-4" />
                     </button>

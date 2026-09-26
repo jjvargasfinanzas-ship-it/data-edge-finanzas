@@ -51,7 +51,7 @@ export function ObligationCard({ s, today }: { s: ObligationSummary; today: stri
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-ink">{o.creditor}</p>
           <p className="truncate text-xs text-ink-2/80">
-            {o.concept} · {OBLIGATION_KIND_LABELS[o.kind]}
+            {o.concept} · {o.class_name ?? OBLIGATION_KIND_LABELS[o.kind]}
           </p>
         </div>
         <StateBadge state={s.state} />

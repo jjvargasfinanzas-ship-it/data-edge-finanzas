@@ -7,7 +7,7 @@ import { Card, EmptyState, PageHeader } from "@/components/ui/misc";
 import { StatTile, TileGrid } from "@/components/ui/tiles";
 import { cn } from "@/components/ui/cn";
 import { addDays } from "@/lib/dates";
-import { CREDITOR_TYPE_LABELS, OBLIGATION_KIND_LABELS, type ObligationKind, type ObligationSummary } from "@/lib/obligations";
+import { OBLIGATION_KIND_LABELS, UNCLASSIFIED, type ObligationKind, type ObligationSummary } from "@/lib/obligations";
 import { byPriority, loadObligations } from "../load";
 
 export const metadata: Metadata = { title: "Obligaciones" };
@@ -51,20 +51,22 @@ export default async function ObligacionesListaPage({
   };
   const acreedor = sp.acreedor?.trim();
   const tipo = sp.tipo && sp.tipo in OBLIGATION_KIND_LABELS ? (sp.tipo as ObligationKind) : undefined;
-  const clase = sp.clase === "person" || sp.clase === "entity" ? sp.clase : undefined;
+  const clase = sp.clase?.trim() || undefined;
 
   const list = summaries
     .filter(matchEstado)
     .filter((s) => !acreedor || s.obligation.creditor.trim().toLowerCase() === acreedor.toLowerCase())
     .filter((s) => !tipo || s.obligation.kind === tipo)
-    .filter((s) => !clase || (s.obligation.creditor_type === "person" ? "person" : "entity") === clase)
+    .filter((s) => !clase || (s.obligation.class_id ?? "none") === clase)
     .sort(byPriority);
 
   const pending = list.reduce((a, s) => a + toBase(s.pending, s.obligation.currency), 0);
   const paid = list.reduce((a, s) => a + toBase(Math.min(s.paid, s.totalToPay), s.obligation.currency), 0);
   const overdue = list.reduce((a, s) => a + toBase(s.overdueAmount, s.obligation.currency), 0);
 
-  const extra = acreedor ? { k: "acreedor", v: acreedor, label: acreedor } : tipo ? { k: "tipo", v: tipo, label: OBLIGATION_KIND_LABELS[tipo] } : clase ? { k: "clase", v: clase, label: CREDITOR_TYPE_LABELS[clase] } : null;
+  const extra = acreedor ? { k: "acreedor", v: acreedor, label: acreedor } : tipo ? { k: "tipo", v: tipo, label: OBLIGATION_KIND_LABELS[tipo] } : clase
+        ? { k: "clase", v: clase, label: summaries.find((s) => (s.obligation.class_id ?? "none") === clase)?.obligation.class_name ?? UNCLASSIFIED }
+        : null;
   const link = (e: Estado, keepExtra = true) => {
     const u = new URLSearchParams();
     if (e !== "activas") u.set("estado", e);

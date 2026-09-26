@@ -4,7 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { saveObligation } from "@/app/actions/obligations";
 import { initialState } from "@/app/actions/types";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Segmented, Select, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { isLoan } from "@/lib/constants";
 import { CURRENCIES, formatMoney, parseAmountInput, type Currency } from "@/lib/money";
 import { FREQUENCY_LABELS, type Frequency } from "@/lib/recurrence";
@@ -17,7 +17,7 @@ import { useAppData } from "../app-data";
 export type ObligationInitial = Partial<{
   id: string;
   creditor: string;
-  creditor_type: "person" | "entity";
+  class_id: string | null;
   kind: ObligationKind;
   concept: string;
   currency: Currency;
@@ -34,13 +34,15 @@ export type ObligationInitial = Partial<{
 const FREQS: Frequency[] = ["monthly", "once", "biweekly", "semimonthly", "weekly", "bimonthly", "quarterly", "semiannual", "yearly"];
 
 export function ObligationForm({ initial, onDone }: { initial: ObligationInitial; onDone: () => void }) {
-  const { accounts, today } = useAppData();
+  const { accounts, today, obligationClasses } = useAppData();
   const [state, action, pending] = useActionState(saveObligation, initialState);
   useFormResult(state, onDone);
   const fe = state.fieldErrors ?? {};
 
   const payFrom = accounts.filter((a) => (!a.is_archived || a.id === initial.account_id) && !isLoan(a.type) && a.type !== "investment");
-  const [creditorType, setCreditorType] = useState<"person" | "entity">(initial.creditor_type ?? "entity");
+  const classes = obligationClasses.filter((c) => !c.is_archived || c.id === initial.class_id);
+  const [classId, setClassId] = useState(initial.class_id ?? classes[0]?.id ?? "");
+  const isPerson = classes.find((c) => c.id === classId)?.name === "Personas naturales";
   const [currency, setCurrency] = useState<Currency>(initial.currency ?? "COP");
   const [frequency, setFrequency] = useState<Frequency>(initial.frequency ?? "monthly");
   const [installments, setInstallments] = useState(String(initial.installments ?? 1));
@@ -68,22 +70,28 @@ export function ObligationForm({ initial, onDone }: { initial: ObligationInitial
     <form action={action} className="space-y-4">
       {initial.id && <input type="hidden" name="id" value={initial.id} />}
 
-      <Segmented
-        name="creditor_type"
-        value={creditorType}
-        onChange={setCreditorType}
-        options={[
-          { value: "entity", label: "Entidad" },
-          { value: "person", label: "Persona" },
-        ]}
-      />
+      <Field
+        label="Clasificación del acreedor"
+        htmlFor="class_id"
+        error={fe.class_id}
+        hint="Obligaciones financieras: no es ingreso ni gasto. Puedes editar la lista en Configuración."
+      >
+        <Select id="class_id" name="class_id" value={classId} onChange={(e) => setClassId(e.target.value)} required>
+          {!classes.length && <option value="">Sin clasificaciones: revisa Configuración</option>}
+          {classes.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
+      </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={creditorType === "person" ? "¿A quién le debes?" : "Entidad acreedora"} htmlFor="creditor" error={fe.creditor}>
-          <Input id="creditor" name="creditor" required maxLength={80} defaultValue={initial.creditor} placeholder={creditorType === "person" ? "Ej. Carlos Pérez" : "Ej. Bancolombia, DIAN"} />
+        <Field label={isPerson ? "¿A quién le debes?" : "Acreedor"} htmlFor="creditor" error={fe.creditor}>
+          <Input id="creditor" name="creditor" required maxLength={80} defaultValue={initial.creditor} placeholder={isPerson ? "Ej. Carlos Pérez" : "Ej. Bancolombia, Falabella, DIAN"} />
         </Field>
-        <Field label="Tipo" htmlFor="kind">
-          <Select id="kind" name="kind" defaultValue={initial.kind ?? (creditorType === "person" ? "personal" : "bank_loan")}>
+        <Field label="Tipo de obligación" htmlFor="kind">
+          <Select id="kind" name="kind" defaultValue={initial.kind ?? "bank_loan"}>
             {(Object.keys(OBLIGATION_KIND_LABELS) as ObligationKind[]).map((k) => (
               <option key={k} value={k}>
                 {OBLIGATION_KIND_LABELS[k]}

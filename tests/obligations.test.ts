@@ -4,7 +4,8 @@ import { buildPortfolio, installmentAmounts, installmentDates, summarizeObligati
 const base: ObligationRecord = {
   id: "o1",
   creditor: "Banco Uno",
-  creditor_type: "entity",
+  class_id: "c-fin",
+  class_name: "Entidades financieras",
   kind: "bank_loan",
   concept: "Libre inversión",
   currency: "COP",
@@ -66,7 +67,7 @@ describe("tablero", () => {
   it("consolida saldos, vencidos, próximos y agrupaciones", () => {
     const a = summarizeObligation(base, 400_000, "2026-03-05");
     const b = summarizeObligation(
-      { ...base, id: "o2", creditor: "Ana", creditor_type: "person", kind: "personal", original_amount: 500_000, installments: 1, frequency: "once", first_due_date: "2026-03-20" },
+      { ...base, id: "o2", creditor: "Ana", class_id: "c-per", class_name: "Personas naturales", kind: "personal", original_amount: 500_000, installments: 1, frequency: "once", first_due_date: "2026-03-20" },
       0,
       "2026-03-05",
     );
@@ -78,7 +79,7 @@ describe("tablero", () => {
     expect(p.overdueCount).toBe(1);
     expect(p.soonCount).toBe(2); // 20-mar y 31-mar
     expect(p.byCreditor[0].label).toBe("Banco Uno");
-    expect(p.byCreditorType.map((r) => r.key).sort()).toEqual(["entity", "person"]);
+    expect(p.byClass.map((r) => r.label).sort()).toEqual(["Entidades financieras", "Personas naturales"]);
     expect(p.upcoming[0].status).toBe("overdue");
     expect(p.upcoming.map((u) => u.date)).toEqual(["2026-02-28", "2026-03-20", "2026-03-31"]);
   });

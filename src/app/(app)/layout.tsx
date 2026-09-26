@@ -1,18 +1,19 @@
 import { redirect } from "next/navigation";
 import { AppDataProvider } from "@/components/app/app-data";
 import { AppShell } from "@/components/app/shell";
-import { getAccounts, getCategories, getContext, getPlanned } from "@/lib/data";
+import { getAccounts, getCategories, getContext, getObligationClasses, getPlanned } from "@/lib/data";
 import { formatLong } from "@/lib/dates";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { profile, today, currency } = await getContext();
   if (!profile.onboarding_completed_at) redirect("/bienvenida");
-  const [accounts, categories, planned] = await Promise.all([getAccounts(), getCategories(), getPlanned()]);
+  const [accounts, categories, planned, obligationClasses] = await Promise.all([getAccounts(), getCategories(), getPlanned(), getObligationClasses()]);
 
   return (
     <AppDataProvider
       today={today}
       currency={currency}
+      obligationClasses={obligationClasses.map((c) => ({ id: c.id, name: c.name, is_archived: c.is_archived }))}
       planned={planned.map((p) => ({
         id: p.id,
         kind: p.kind,

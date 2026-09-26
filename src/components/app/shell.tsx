@@ -192,7 +192,7 @@ export function AppShell({
   ];
 
   return (
-    <div className="min-h-dvh bg-canvas lg:pl-[248px]" data-theme={theme !== "data-edge" ? theme : undefined}>
+    <div className="min-h-dvh bg-canvas lg:pl-[248px]" data-theme-root="" data-theme={theme !== "data-edge" ? theme : undefined}>
       {/* Sidebar escritorio */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] border-r border-card-border bg-card lg:block">
         <SidebarContent path={path} name={name} />

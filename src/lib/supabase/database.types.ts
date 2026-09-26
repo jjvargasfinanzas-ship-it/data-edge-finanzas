@@ -204,10 +204,35 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["planned_items"]["Insert"]>
         Relationships: []
       }
+      obligation_categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          is_archived: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_archived?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["obligation_categories"]["Insert"]>
+        Relationships: []
+      }
       obligations: {
         Row: {
           account_id: string | null
           category_id: string | null
+          class_id: string | null
           concept: string
           created_at: string
           creditor: string
@@ -230,6 +255,7 @@ export type Database = {
         Insert: {
           account_id?: string | null
           category_id?: string | null
+          class_id?: string | null
           concept: string
           created_at?: string
           creditor: string

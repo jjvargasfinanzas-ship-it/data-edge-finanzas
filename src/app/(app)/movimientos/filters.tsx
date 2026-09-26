@@ -77,6 +77,7 @@ export function TransactionFilters({
         <option value="expense">Gastos</option>
         <option value="income">Ingresos</option>
         <option value="transfer">Transferencias</option>
+        <option value="obligation">Pagos de obligaciones</option>
       </Select>
       <Select className="h-10 w-full sm:w-auto sm:min-w-36" value={values.cuenta} onChange={(e) => go({ cuenta: e.target.value })} aria-label="Cuenta">
         <option value="">Todas las cuentas</option>

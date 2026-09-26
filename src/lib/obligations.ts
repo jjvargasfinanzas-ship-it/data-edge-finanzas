@@ -29,13 +29,16 @@ export const OBLIGATION_KIND_LABELS: Record<ObligationKind, string> = {
   other: "Otra",
 };
 
-export const CREDITOR_TYPE_LABELS = { person: "Persona", entity: "Entidad" } as const;
-export type CreditorType = keyof typeof CREDITOR_TYPE_LABELS;
+/** Categoría principal de la clasificación de acreedores (independiente de ingresos y gastos). */
+export const OBLIGATION_ROOT_CATEGORY = "Obligaciones financieras";
+export const UNCLASSIFIED = "Sin clasificar";
 
 export interface ObligationRecord {
   id: string;
   creditor: string;
-  creditor_type: string;
+  /** Subcategoría de Obligaciones financieras (tipo de acreedor). */
+  class_id: string | null;
+  class_name: string | null;
   kind: ObligationKind;
   concept: string;
   currency: Currency;
@@ -186,7 +189,7 @@ export interface Portfolio {
   paidCount: number;
   byCreditor: GroupRow[];
   byKind: GroupRow[];
-  byCreditorType: GroupRow[];
+  byClass: GroupRow[];
   upcoming: UpcomingPayment[];
 }
 
@@ -266,10 +269,7 @@ export function buildPortfolio(
     paidCount: live.length - open.length,
     byCreditor: group((s) => [s.obligation.creditor.trim().toLowerCase(), s.obligation.creditor.trim()]),
     byKind: group((s) => [s.obligation.kind, OBLIGATION_KIND_LABELS[s.obligation.kind]]),
-    byCreditorType: group((s) => {
-      const t = (s.obligation.creditor_type === "person" ? "person" : "entity") as CreditorType;
-      return [t, CREDITOR_TYPE_LABELS[t]];
-    }),
+    byClass: group((s) => [s.obligation.class_id ?? "none", s.obligation.class_name ?? UNCLASSIFIED]),
     upcoming,
   };
 }

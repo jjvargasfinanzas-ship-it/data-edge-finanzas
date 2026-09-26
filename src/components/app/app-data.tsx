@@ -16,6 +16,7 @@ export type AccountOption = Pick<
   Tables<"accounts">,
   "id" | "name" | "type" | "currency" | "is_archived" | "credit_limit" | "statement_day" | "due_day" | "institution" | "opening_balance" | "opening_date" | "include_in_net_worth"
 > & { balance: number };
+export type ObligationClassOption = { id: string; name: string; is_archived: boolean };
 export type CategoryOption = Pick<Tables<"categories">, "id" | "name" | "kind" | "parent_id" | "icon" | "color" | "is_archived">;
 export type PlannedOption = Pick<
   Tables<"planned_items">,
@@ -36,6 +37,7 @@ interface Ctx {
   accounts: AccountOption[];
   planned: PlannedOption[];
   categories: CategoryOption[];
+  obligationClasses: ObligationClassOption[];
   today: string;
   currency: Currency;
   openTransaction: (initial?: TxInitial) => void;
@@ -63,6 +65,7 @@ export function AppDataProvider({
   accounts,
   planned,
   categories,
+  obligationClasses,
   today,
   currency,
   children,
@@ -70,6 +73,7 @@ export function AppDataProvider({
   accounts: AccountOption[];
   planned: PlannedOption[];
   categories: CategoryOption[];
+  obligationClasses: ObligationClassOption[];
   today: string;
   currency: Currency;
   children: React.ReactNode;
@@ -82,6 +86,7 @@ export function AppDataProvider({
       accounts,
       planned,
       categories,
+      obligationClasses,
       today,
       currency,
       openTransaction: (initial = {}) => setSheet({ type: "tx", initial }),
@@ -92,7 +97,7 @@ export function AppDataProvider({
       openObligation: (initial = {}) => setSheet({ type: "obligation", initial }),
       openPayment: (initial) => setSheet({ type: "payment", initial }),
     }),
-    [accounts, planned, categories, today, currency],
+    [accounts, planned, categories, obligationClasses, today, currency],
   );
 
   let title = "";

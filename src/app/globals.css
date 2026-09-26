@@ -131,6 +131,73 @@
   --color-event: #71717a;
 }
 
+[data-theme="vino"] {
+  --color-navy-950: #1f0b13;
+  --color-navy-900: #33111f;
+  --color-navy-800: #45172a;
+  --color-navy-700: #5c1f38;
+  --color-navy-600: #742848;
+  --color-navy-500: #93375c;
+  --color-teal-50: #fdf6e9;
+  --color-teal-200: #f5dfb0;
+  --color-teal-300: #ecc777;
+  --color-teal-400: #e2ae46;
+  --color-teal-500: #d4962a;
+  --color-teal-600: #b07a1f;
+  --color-teal-700: #8a5f18;
+  --color-ink: #2b1d22;
+  --color-ink-2: #5a4148;
+  --color-muted: #7a646a;
+  --color-series-in: #b07a1f;
+  --color-series-out: #4f7cc9;
+  --color-out-ink: #3a5fa8;
+  --color-event: #8b5cf6;
+}
+[data-theme="salvia"] {
+  --color-navy-950: #142019;
+  --color-navy-900: #1e2e25;
+  --color-navy-800: #2a3e33;
+  --color-navy-700: #3a5245;
+  --color-navy-600: #4c6858;
+  --color-navy-500: #62806e;
+  --color-teal-50: #f2f6f1;
+  --color-teal-200: #d5e3d2;
+  --color-teal-300: #b6cfb1;
+  --color-teal-400: #92b58c;
+  --color-teal-500: #739c6c;
+  --color-teal-600: #5a8254;
+  --color-teal-700: #466841;
+  --color-ink: #1f2a23;
+  --color-ink-2: #45534a;
+  --color-muted: #6c7a71;
+  --color-series-in: #5a8254;
+  --color-series-out: #c07a5a;
+  --color-out-ink: #9a5a3c;
+  --color-event: #8b5cf6;
+}
+[data-theme="arena"] {
+  --color-navy-950: #241a14;
+  --color-navy-900: #33261d;
+  --color-navy-800: #463428;
+  --color-navy-700: #5c4536;
+  --color-navy-600: #765946;
+  --color-navy-500: #957159;
+  --color-teal-50: #fcf4ee;
+  --color-teal-200: #f3d9c7;
+  --color-teal-300: #e8bb9d;
+  --color-teal-400: #da9a72;
+  --color-teal-500: #c97d52;
+  --color-teal-600: #ad6440;
+  --color-teal-700: #8a4e32;
+  --color-ink: #2a211b;
+  --color-ink-2: #57483e;
+  --color-muted: #7d6d62;
+  --color-series-in: #ad6440;
+  --color-series-out: #5b7fc4;
+  --color-out-ink: #3f63a8;
+  --color-event: #8b5cf6;
+}
+
 /* Tonos pastel derivados de la paleta activa: se declaran también en [data-theme]
    para que cada tema recalcule sus propios tonos. */
 :root,

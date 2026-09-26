@@ -11,21 +11,28 @@ export function ThemePicker({ current }: { current: string }) {
   const [selected, setSelected] = useState(current);
   const [pending, start] = useTransition();
 
-  const pick = (id: string) => {
-    const prev = selected;
-    setSelected(id);
-    // Vista previa inmediata
-    const targets = new Set<HTMLElement>([document.documentElement, ...document.querySelectorAll<HTMLElement>("[data-theme]")]);
+  /** Aplica la paleta en la página actual (html y contenedor de la app). */
+  const apply = (id: string) => {
+    const targets = new Set<HTMLElement>([document.documentElement, ...document.querySelectorAll<HTMLElement>("[data-theme], [data-theme-root]")]);
     for (const el of targets) {
       if (id === "data-edge") delete el.dataset.theme;
       else el.dataset.theme = id;
     }
+  };
+
+  const pick = (id: string) => {
+    if (id === selected || pending) return;
+    const prev = selected;
+    setSelected(id);
+    apply(id); // vista previa inmediata
     start(async () => {
       const r = await updateTheme(id);
       if (r.ok) toast.success(r.message);
       else {
-        toast.error(r.error ?? "No se pudo guardar");
+        // No se guardó: vuelve a la paleta anterior para que lo que ves sea lo guardado.
+        toast.error(r.error ?? "No se pudo guardar la paleta");
         setSelected(prev);
+        apply(prev);
       }
     });
   };

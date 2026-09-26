@@ -5,7 +5,7 @@ import { NewPlannedButton } from "@/components/app/open-buttons";
 import { Card, EmptyState, Money, PageHeader } from "@/components/ui/misc";
 import { StatTile, TileGrid } from "@/components/ui/tiles";
 import { cn } from "@/components/ui/cn";
-import { getAccounts, getCategories, getContext, getPeriodPlan, getPlanned, getRates } from "@/lib/data";
+import { getAccounts, getCategories, getContext, getObligationPlannedIds, getPeriodPlan, getPlanned, getRates } from "@/lib/data";
 import { endOfMonth, formatMonth, startOfMonth } from "@/lib/dates";
 import { convert } from "@/lib/money";
 import { FREQUENCY_LABELS, MONTHLY_FACTOR, nextOccurrence } from "@/lib/recurrence";
@@ -22,12 +22,13 @@ export default async function ProgramadosPage({ searchParams }: { searchParams: 
   const sp = await searchParams;
   const tab = (sp.tipo === "gastos" ? "gastos" : "ingresos") as keyof typeof TABS;
   const { today, currency } = await getContext();
-  const [planned, accounts, categories, rates, plan] = await Promise.all([
+  const [planned, accounts, categories, rates, plan, oblPlanned] = await Promise.all([
     getPlanned(),
     getAccounts(),
     getCategories(),
     getRates(),
     getPeriodPlan(startOfMonth(today), endOfMonth(today)),
+    getObligationPlannedIds(),
   ]);
   const acc = new Map(accounts.map((a) => [a.id, a]));
   const cat = new Map(categories.map((c) => [c.id, c]));
@@ -55,7 +56,7 @@ export default async function ProgramadosPage({ searchParams }: { searchParams: 
       currency: a?.currency ?? "COP",
       accountName: a?.name ?? "",
       toAccountName: p.to_account_id ? (acc.get(p.to_account_id)?.name ?? "") : null,
-      categoryName: c ? (parent ? `${parent.name} · ${c.name}` : c.name) : null,
+      categoryName: oblPlanned.has(p.id) ? "Obligación financiera" : c ? (parent ? `${parent.name} · ${c.name}` : c.name) : null,
       icon: c?.icon ?? parent?.icon ?? null,
       color: c?.color ?? parent?.color ?? null,
       frequencyLabel: FREQUENCY_LABELS[p.frequency],
@@ -67,7 +68,8 @@ export default async function ProgramadosPage({ searchParams }: { searchParams: 
 
   const active = rows.filter((r) => r.is_active);
   const fixedIn = active.filter((r) => r.kind === "income").reduce((s, r) => s + r.monthly, 0);
-  const fixedOut = active.filter((r) => r.kind === "expense").reduce((s, r) => s + r.monthly, 0);
+  // Las cuotas de obligaciones no son gastos fijos: se ven en Obligaciones.
+  const fixedOut = active.filter((r) => r.kind === "expense" && !oblPlanned.has(r.id)).reduce((s, r) => s + r.monthly, 0);
   const visible = rows.filter((r) => (TABS[tab].kinds as readonly string[]).includes(r.kind));
   const isIncome = tab === "ingresos";
 
