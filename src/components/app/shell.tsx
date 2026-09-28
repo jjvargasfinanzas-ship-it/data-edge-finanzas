@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowDownLeft, ArrowLeftRight, HandCoins, ArrowUpRight, CalendarClock, CalendarPlus, ExternalLink, LayoutDashboard, Lock,
-  LogOut, Menu, Plus, ReceiptText, Settings, Waves, CalendarDays, X,
+  Banknote, LogOut, Menu, Plus, ReceiptText, Settings, Waves, CalendarDays, X,
 } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { Logo } from "@/components/brand/logo";
@@ -81,7 +81,8 @@ function SidebarContent({ path, name, onNavigate }: { path: string; name: string
 }
 
 function QuickActions({ className, compact }: { className?: string; compact?: boolean }) {
-  const { openTransaction, openPlanned, openEvent, openLoan, openObligation } = useAppData();
+  const { accounts, openTransaction, openPlanned, openEvent, openLoan, openObligation, openAdvance } = useAppData();
+  const hasCards = accounts.some((a) => a.type === "credit_card" && !a.is_archived);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -103,6 +104,7 @@ function QuickActions({ className, compact }: { className?: string; compact?: bo
     { label: "Registrar gasto", icon: ArrowUpRight, tone: "text-out-ink bg-series-out/10", run: () => openTransaction({ kind: "expense" }) },
     { label: "Registrar ingreso", icon: ArrowDownLeft, tone: "text-teal-700 bg-teal-50", run: () => openTransaction({ kind: "income" }) },
     { label: "Transferencia", icon: ArrowLeftRight, tone: "text-navy-700 bg-navy-900/5", run: () => openTransaction({ kind: "transfer" }) },
+    ...(hasCards ? [{ label: "Avance de tarjeta", icon: Banknote, tone: "text-navy-700 bg-navy-900/5", run: () => openAdvance({}) }] : []),
     { label: "Nueva obligación o deuda", icon: ReceiptText, tone: "text-navy-700 bg-navy-900/5", run: () => openObligation({}) },
     { label: "Préstamo (presté o me prestaron)", icon: HandCoins, tone: "text-navy-700 bg-navy-900/5", run: () => openLoan({}) },
     { label: "Programar ingreso", icon: CalendarClock, tone: "text-teal-700 bg-teal-50", run: () => openPlanned({ kind: "income" }) },

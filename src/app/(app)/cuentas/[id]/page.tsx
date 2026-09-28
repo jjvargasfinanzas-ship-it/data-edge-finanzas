@@ -123,7 +123,7 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
   if (expense) composition.push({ op: "−", label: isCard ? "Compras con la tarjeta" : "Gastos", value: money(expense), tone: "out" });
   if (obligations) composition.push({ op: "−", label: "Pagos de obligaciones", hint: "No son gastos: reducen lo que debes", value: money(obligations), tone: "out" });
   if (trIn) composition.push({ op: "+", label: isCard ? "Pagos recibidos" : "Transferencias recibidas", value: money(trIn), tone: "in" });
-  if (trOut) composition.push({ op: "−", label: "Transferencias enviadas", value: money(trOut), tone: "out" });
+  if (trOut) composition.push({ op: "−", label: isCard ? "Avances en efectivo" : "Transferencias enviadas", value: money(trOut), tone: "out" });
   composition.push({
     op: "=",
     label: isCard ? "Saldo hoy (negativo = deuda)" : "Saldo real hoy",

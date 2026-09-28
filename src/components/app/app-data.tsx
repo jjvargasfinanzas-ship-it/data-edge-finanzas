@@ -11,6 +11,7 @@ import { AccountForm, type AccountInitial } from "./forms/account-form";
 import { LoanForm, type LoanInitial } from "./forms/loan-form";
 import { ObligationForm, type ObligationInitial } from "./forms/obligation-form";
 import { PaymentForm, type PaymentInitial } from "./forms/payment-form";
+import { AdvanceForm, type AdvanceInitial } from "./forms/advance-form";
 
 export type AccountOption = Pick<
   Tables<"accounts">,
@@ -31,6 +32,7 @@ type Sheet =
   | { type: "loan"; initial: LoanInitial }
   | { type: "obligation"; initial: ObligationInitial }
   | { type: "payment"; initial: PaymentInitial }
+  | { type: "advance"; initial: AdvanceInitial }
   | null;
 
 interface Ctx {
@@ -47,6 +49,7 @@ interface Ctx {
   openLoan: (initial?: LoanInitial) => void;
   openObligation: (initial?: ObligationInitial) => void;
   openPayment: (initial: PaymentInitial) => void;
+  openAdvance: (initial: AdvanceInitial) => void;
 }
 
 const AppDataContext = createContext<Ctx | null>(null);
@@ -96,6 +99,7 @@ export function AppDataProvider({
       openLoan: (initial = {}) => setSheet({ type: "loan", initial }),
       openObligation: (initial = {}) => setSheet({ type: "obligation", initial }),
       openPayment: (initial) => setSheet({ type: "payment", initial }),
+      openAdvance: (initial) => setSheet({ type: "advance", initial }),
     }),
     [accounts, planned, categories, obligationClasses, today, currency],
   );
@@ -124,6 +128,7 @@ export function AppDataProvider({
   if (sheet?.type === "loan") title = "Registrar préstamo";
   if (sheet?.type === "obligation") title = sheet.initial.id ? "Editar obligación" : "Nueva obligación";
   if (sheet?.type === "payment") title = `Pago · ${sheet.initial.label}`;
+  if (sheet?.type === "advance") title = sheet.initial.cardId ? `Avance · ${accounts.find((a) => a.id === sheet.initial.cardId)?.name ?? "tarjeta"}` : "Avance de tarjeta";
 
   return (
     <AppDataContext.Provider value={value}>
@@ -145,6 +150,7 @@ export function AppDataProvider({
         {sheet?.type === "loan" && <LoanForm initial={sheet.initial} onDone={close} />}
         {sheet?.type === "obligation" && <ObligationForm initial={sheet.initial} onDone={close} />}
         {sheet?.type === "payment" && <PaymentForm initial={sheet.initial} onDone={close} />}
+        {sheet?.type === "advance" && <AdvanceForm initial={sheet.initial} onDone={close} />}
       </Modal>
     </AppDataContext.Provider>
   );

@@ -650,3 +650,81 @@ export async function deleteRate(id: string): Promise<ActionState> {
   const { error } = await supabase.from("exchange_rates").delete().eq("id", id);
   return error ? dbError(error) : done("Tasa eliminada");
 }
+
+// ------------------------------------------------------------------
+// Avances de tarjeta de crédito
+// ------------------------------------------------------------------
+/**
+ * Avance: la plata sale de la tarjeta (aumenta la deuda) y entra a una cuenta,
+ * billetera o efectivo. No es ingreso ni gasto: es una transferencia.
+ * La comisión del banco, si la hay, sí es un gasto cargado a la tarjeta.
+ */
+export async function registerCashAdvance(_: ActionState, fd: FormData): Promise<ActionState> {
+  const dest = str(fd, "to_account_id");
+  const parsed = z
+    .object({
+      card_id: uuid,
+      to_account_id: z.union([uuid, z.literal("new-cash")], { message: "Elige a dónde llegó la plata" }),
+      amount,
+      fee: z.number().positive().max(1e12).nullable(),
+      date: isoDate,
+      notes: z.string().max(500).nullable(),
+    })
+    .safeParse({
+      card_id: str(fd, "card_id"),
+      to_account_id: dest,
+      amount: amountOf(fd, "amount"),
+      fee: amountOf(fd, "fee") ?? null,
+      date: str(fd, "date"),
+      notes: optStr(fd, "notes"),
+    });
+  if (!parsed.success) return zodFail(parsed.error);
+  const v = parsed.data;
+  const { supabase, today } = await getContext();
+  if (v.date > today) return fail("Un avance ya ocurrió: usa hoy o una fecha pasada.", { date: "La fecha no puede ser futura" });
+
+  const { data: card } = await supabase.from("accounts").select("id, name, type, currency").eq("id", v.card_id).single();
+  if (!card || card.type !== "credit_card") return fail("Elige una tarjeta de crédito válida.");
+
+  // Retiro en efectivo sin cuenta de efectivo: se crea una.
+  let toId = v.to_account_id;
+  if (toId === "new-cash") {
+    const { data: cash, error: ce } = await supabase
+      .from("accounts")
+      .insert({ name: "Efectivo", type: "cash", currency: card.currency, opening_balance: 0, opening_date: v.date })
+      .select("id")
+      .single();
+    if (ce || !cash) return dbError(ce);
+    toId = cash.id;
+  }
+  const { data: to } = await supabase.from("accounts").select("id, name, type, currency").eq("id", toId).single();
+  if (!to || !["bank_savings", "bank_checking", "cash", "digital_wallet"].includes(to.type))
+    return fail("El avance debe llegar a una cuenta, billetera o efectivo.", { to_account_id: "Elige otra cuenta" });
+  if (to.currency !== card.currency)
+    return fail(`La cuenta destino está en ${to.currency} y la tarjeta en ${card.currency}.`, { to_account_id: "Usa una cuenta en la misma moneda" });
+
+  const { error } = await supabase.from("transactions").insert({
+    kind: "transfer",
+    amount: v.amount,
+    account_id: card.id,
+    to_account_id: to.id,
+    date: v.date,
+    description: `Avance ${card.name}`.slice(0, 140),
+    notes: v.notes,
+  });
+  if (error) return dbError(error);
+
+  if (v.fee) {
+    const { data: cat } = await supabase.from("categories").select("id").eq("kind", "expense").is("parent_id", null).eq("name", "Deudas").maybeSingle();
+    const { error: fe } = await supabase.from("transactions").insert({
+      kind: "expense",
+      amount: v.fee,
+      account_id: card.id,
+      category_id: cat?.id ?? null,
+      date: v.date,
+      description: `Comisión avance ${card.name}`.slice(0, 140),
+    });
+    if (fe) return dbError(fe);
+  }
+  return done(`Avance registrado: entró a ${to.name} y aumentó la deuda de ${card.name}. No cuenta como ingreso.`);
+}

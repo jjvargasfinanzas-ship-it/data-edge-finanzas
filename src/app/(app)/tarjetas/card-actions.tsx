@@ -5,18 +5,21 @@ import { useAppData, type AccountOption } from "@/components/app/app-data";
 import { Button } from "@/components/ui/button";
 
 export function CardActions({ card, debt }: { card: AccountOption; debt: number }) {
-  const { accounts, openTransaction, openAccount } = useAppData();
+  const { accounts, openTransaction, openAccount, openAdvance } = useAppData();
   const bank = accounts.find((a) => !a.is_archived && ["bank_savings", "bank_checking", "digital_wallet"].includes(a.type));
   return (
     <div className="flex flex-wrap gap-2">
       <Button variant="ghost" size="sm" onClick={() => openAccount({ ...card })}>
         Editar
       </Button>
-      <Link href={`/cuentas/${card.id}`} className="inline-flex h-9 items-center rounded-xl px-3 text-sm font-semibold text-ink-2 hover:bg-navy-900/5">
+      <Link href={`/cuentas/${card.id}`} className="inline-flex h-8 items-center rounded-xl px-3 text-xs font-semibold text-ink-2 hover:bg-tint-2">
         Movimientos
       </Link>
       <Button variant="secondary" size="sm" onClick={() => openTransaction({ kind: "expense", account_id: card.id })}>
         Compra
+      </Button>
+      <Button variant="secondary" size="sm" onClick={() => openAdvance({ cardId: card.id })}>
+        Avance
       </Button>
       <Button
         size="sm"

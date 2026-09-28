@@ -26,7 +26,8 @@ export default async function TarjetasPage() {
     ? await supabase
         .from("transactions")
         .select("account_id, amount, date")
-        .eq("kind", "expense")
+        // Compras y avances (transferencias que salen de la tarjeta), sin pagos recibidos
+        .in("kind", ["expense", "transfer"])
         .in("account_id", cards.map((c) => c.id))
         .gte("date", since)
     : { data: [] };
@@ -107,7 +108,7 @@ export default async function TarjetasPage() {
                     <dd className={cn("mt-0.5 text-sm font-semibold", used > 0 && dueIn <= 3 ? "text-warning" : "text-ink")}>{formatShort(due)}</dd>
                   </div>
                   <div className="p-4">
-                    <dt className="text-xs font-semibold text-muted">Compras del periodo</dt>
+                    <dt className="text-xs font-semibold text-muted">Compras y avances</dt>
                     <dd className="num mt-0.5 text-sm font-semibold text-ink">{formatMoney(periodSpend, c.currency, { compact: periodSpend >= 1e7 })}</dd>
                   </div>
                 </dl>
