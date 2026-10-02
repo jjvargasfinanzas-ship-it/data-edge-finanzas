@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ArrowLeftRight } from "lucide-react";
 import { useAppData } from "@/components/app/app-data";
 import { cn } from "@/components/ui/cn";
@@ -29,6 +30,7 @@ export interface RealDayRow {
       category_id: string | null;
       description: string | null;
       notes: string | null;
+      obligation_id: string | null;
     };
   }[];
 }
@@ -36,6 +38,7 @@ export interface RealDayRow {
 /** Días con movimientos reales; tocar un movimiento lo abre para corregirlo. */
 export function RealDays({ days, currency, today }: { days: RealDayRow[]; currency: Currency; today: string }) {
   const { openTransaction } = useAppData();
+  const router = useRouter();
   return (
     <ol className="divide-y divide-line">
       {days.map((d) => (
@@ -49,7 +52,7 @@ export function RealDays({ days, currency, today }: { days: RealDayRow[]; curren
               <li key={m.id}>
                 <button
                   type="button"
-                  onClick={() => openTransaction({ ...m.tx })}
+                  onClick={() => (m.tx.obligation_id ? router.push(`/obligaciones/${m.tx.obligation_id}`) : openTransaction({ ...m.tx }))}
                   className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-canvas"
                 >
                   {m.isTransfer ? (

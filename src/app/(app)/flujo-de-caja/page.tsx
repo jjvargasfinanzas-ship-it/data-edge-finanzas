@@ -66,7 +66,7 @@ async function RealView({ month, today, currency }: { month: string; today: stri
     getCategories(),
     supabase
       .from("transactions")
-      .select("id, date, kind, amount, to_amount, account_id, to_account_id, category_id, description, notes")
+      .select("id, date, kind, amount, to_amount, account_id, to_account_id, category_id, description, notes, obligation_id")
       .gte("date", from)
       .lte("date", today)
       .order("date")
