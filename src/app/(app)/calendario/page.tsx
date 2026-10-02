@@ -31,7 +31,7 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
     getCashflow(horizon),
     supabase
       .from("transactions")
-      .select("id, kind, date, amount, account_id, to_account_id, to_amount, category_id, description, notes, planned_item_id, planned_date")
+      .select("id, kind, date, amount, account_id, to_account_id, to_amount, category_id, description, notes, planned_item_id, planned_date, obligation_id")
       .gte("date", from)
       .lte("date", to < today ? to : today)
       .order("date"),

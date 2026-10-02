@@ -117,7 +117,9 @@ export function CalendarView({
 
   const openItem = (i: CalItem) => {
     setSheetOpen(false);
-    if (i.type === "tx" && i.tx) openTransaction(i.tx);
+    const oblId = (i.tx as { obligation_id?: string | null } | undefined)?.obligation_id;
+    if (i.type === "tx" && oblId) router.push(`/obligaciones/${oblId}`);
+    else if (i.type === "tx" && i.tx) openTransaction(i.tx);
     else if (i.type === "event" && i.event) openEvent({ ...i.event });
     else if (i.type === "card" && i.occurrence) {
       const bank = accounts.find((a) => !a.is_archived && ["bank_savings", "bank_checking", "digital_wallet"].includes(a.type));
