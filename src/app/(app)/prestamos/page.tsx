@@ -54,22 +54,15 @@ export default async function PrestamosPage() {
 
   const groups = [
     { title: "Me deben", hint: "Plata que presté", items: active.filter((r) => r.receivable) },
-    { title: "Debo", hint: "Plata que me prestaron", items: active.filter((r) => !r.receivable) },
+    { title: "Debo", hint: "Registrados antes de Obligaciones", items: active.filter((r) => !r.receivable) },
   ];
 
   return (
     <>
       <PageHeader
         title="Préstamos"
-        subtitle="Prestar o recibir un préstamo no es gasto ni ingreso: es plata que vuelve o que debes devolver."
-        actions={
-          <>
-            <NewLoanButton variant="secondary" initial={{ direction: "borrowed" }}>
-              Me prestaron
-            </NewLoanButton>
-            <NewLoanButton initial={{ direction: "lent" }}>Presté</NewLoanButton>
-          </>
-        }
+        subtitle="Plata que prestaste. No es gasto: vuelve a tus cuentas con cada abono. Lo que tú debes está en Obligaciones."
+        actions={<NewLoanButton initial={{ direction: "lent" }}>Presté</NewLoanButton>}
       />
 
       {rows.length === 0 ? (
@@ -85,7 +78,19 @@ export default async function PrestamosPage() {
         <>
           <TileGrid cols={2} className="mb-4">
             <StatTile label="Me deben" value={owedToMe} currency={currency} tone="positive" accent="teal" />
-            <StatTile label="Debo" value={iOwe} currency={currency} accent="navy" />
+            {iOwe > 0 ? (
+              <StatTile label="Debo (préstamos antiguos)" value={iOwe} currency={currency} accent="navy" hint="Lo nuevo que debas, en Obligaciones" href="/obligaciones" />
+            ) : (
+              <StatTile
+                label="Préstamos activos"
+                value={active.filter((r) => r.receivable && r.pending > 0.005).length}
+                currency={currency}
+                valueText={String(active.filter((r) => r.receivable && r.pending > 0.005).length)}
+                accent="card"
+                hint="Lo que debes está en Obligaciones"
+                href="/obligaciones"
+              />
+            )}
           </TileGrid>
 
           <div className="space-y-4">
