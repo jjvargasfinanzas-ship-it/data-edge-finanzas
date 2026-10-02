@@ -88,7 +88,7 @@ export function TransactionList({ rows, page, pages, count }: { rows: TxRow[]; p
                     </p>
                     <p className="truncate text-xs text-muted">
                       {isObl
-                        ? `Pago de obligación · ${t.accountName}`
+                        ? `${isIn ? "Desembolso de obligación" : "Pago de obligación"} · ${t.accountName}`
                         : isTr
                           ? `${t.accountName} → ${t.toAccountName}`
                           : [t.description ? t.categoryName : null, t.accountName].filter(Boolean).join(" · ")}

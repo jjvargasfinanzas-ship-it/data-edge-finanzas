@@ -29,7 +29,9 @@ export default async function MovimientosPage({ searchParams }: { searchParams: 
     .range((page - 1) * PAGE, page * PAGE - 1);
 
   // Los pagos de obligaciones no son gastos: tienen su propio filtro.
-  if (sp.tipo === "income" || sp.tipo === "transfer") q = q.eq("kind", sp.tipo);
+  // Los desembolsos de obligaciones no son ingresos: también van en su propio filtro.
+  if (sp.tipo === "transfer") q = q.eq("kind", "transfer");
+  if (sp.tipo === "income") q = q.eq("kind", "income").is("obligation_id", null);
   if (sp.tipo === "expense") q = q.eq("kind", "expense").is("obligation_id", null);
   if (sp.tipo === "obligation") q = q.not("obligation_id", "is", null);
   if (sp.cuenta && /^[0-9a-f-]{36}$/.test(sp.cuenta)) q = q.or(`account_id.eq.${sp.cuenta},to_account_id.eq.${sp.cuenta}`);
