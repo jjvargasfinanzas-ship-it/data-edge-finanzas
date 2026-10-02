@@ -9,9 +9,9 @@ import { Badge, Card, EmptyState, Progress } from "@/components/ui/misc";
 import { AccountIcon } from "@/components/ui/icons";
 import { StatRows } from "@/components/ui/stat-rows";
 import { cn } from "@/components/ui/cn";
-import { getAccounts, getCashflow, getCategories, getContext, getMonthTotals, getRates } from "@/lib/data";
+import { getAccounts, getCashflow, getCategories, getContext, getMonthTotals, getObligations, getRates } from "@/lib/data";
 import { addDays, diffDays, endOfMonth, formatLong, formatMonth, formatShort, hourInTz, startOfMonth } from "@/lib/dates";
-import { convert, formatMoney, formatPct } from "@/lib/money";
+import { convert, formatMoney, formatPct, type Currency } from "@/lib/money";
 import { isLiquid } from "@/lib/cashflow";
 import { nextDayOfMonth } from "@/lib/recurrence";
 
@@ -39,13 +39,14 @@ export default async function InicioPage() {
   const monthFrom = startOfMonth(today);
   const eom = endOfMonth(today);
 
-  const [accounts, categories, rates, totals, flow, txCount] = await Promise.all([
+  const [accounts, categories, rates, totals, flow, txCount, obl] = await Promise.all([
     getAccounts(),
     getCategories(),
     getRates(),
     getMonthTotals(monthFrom, today),
     getCashflow(eom > addDays(today, 7) ? eom : addDays(today, 7)),
     supabase.from("transactions").select("id", { count: "exact", head: true }),
+    getObligations(),
   ]);
 
   const active = accounts.filter((a) => !a.is_archived);
@@ -55,6 +56,10 @@ export default async function InicioPage() {
   const cardDebt = cards.reduce((s, a) => s + toBase(Math.max(0, -a.balance), a.currency), 0);
   const owedToMe = active.filter((a) => a.type === "loan_receivable").reduce((s, a) => s + toBase(Math.max(0, a.balance), a.currency), 0);
   const iOwe = active.filter((a) => a.type === "loan_payable").reduce((s, a) => s + toBase(Math.max(0, -a.balance), a.currency), 0);
+  // Obligaciones: pendiente y vencido (no se restan del disponible)
+  const openObl = obl.items.filter((i) => i.summary.state !== "paid" && i.summary.state !== "cancelled");
+  const oblPending = openObl.reduce((s, i) => s + toBase(i.summary.pending, i.row.currency as Currency), 0);
+  const oblOverdue = openObl.reduce((s, i) => s + i.summary.overdueCount, 0);
 
   // Posiciones financieras (moneda base)
   const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -177,6 +182,18 @@ export default async function InicioPage() {
                   <Link href="/tarjetas" className="flex items-center gap-3 px-4 py-2.5 text-muted hover:bg-tint/70 sm:px-5">
                     <span className="min-w-0 flex-1 truncate text-xs font-semibold">Deuda en tarjetas (no se resta del disponible)</span>
                     <span className="num shrink-0 text-xs font-semibold">{formatMoney(cardDebt, currency)}</span>
+                    <ChevronRight className="size-4 shrink-0" />
+                  </Link>
+                </li>
+              )}
+              {openObl.length > 0 && (
+                <li>
+                  <Link href="/obligaciones" className="flex items-center gap-3 px-4 py-2.5 text-muted hover:bg-canvas/60 sm:px-5">
+                    <span className="min-w-0 flex-1 truncate text-xs font-semibold">
+                      Obligaciones por pagar (no se restan del disponible)
+                      {oblOverdue > 0 && <span className="ml-1.5 text-negative">· {oblOverdue} cuota{oblOverdue > 1 ? "s" : ""} vencida{oblOverdue > 1 ? "s" : ""}</span>}
+                    </span>
+                    <span className="num shrink-0 text-xs font-bold">{formatMoney(oblPending, currency)}</span>
                     <ChevronRight className="size-4 shrink-0" />
                   </Link>
                 </li>
