@@ -238,14 +238,20 @@ export type ObligationPayment = {
   description: string | null;
 };
 
-/** Obligaciones con su cronograma, pagos aplicados y estado. */
+/** Dinero de la obligación que entró a una cuenta propia (no es ingreso). */
+export type ObligationDisbursement = { id: string; date: ISODate; amount: number; account_id: string };
+
+/**
+ * Obligaciones con su cronograma, pagos aplicados y estado.
+ * Los movimientos vinculados son de dos clases: salidas (pagos) y una entrada (desembolso).
+ */
 export const getObligations = cache(async () => {
   const { supabase, today } = await getContext();
   const [{ data: rows }, { data: pays }, accounts, rates, classes] = await Promise.all([
     supabase.from("obligations").select("*").order("first_due_date"),
     supabase
       .from("transactions")
-      .select("id, obligation_id, date, amount, account_id, description")
+      .select("id, kind, obligation_id, date, amount, account_id, description")
       .not("obligation_id", "is", null)
       .order("date", { ascending: false })
       .limit(5000),
@@ -258,8 +264,13 @@ export const getObligations = cache(async () => {
   const obligations = rows ?? [];
   const oblCur = new Map(obligations.map((o) => [o.id, o.currency as Currency]));
   const payments = new Map<string, ObligationPayment[]>();
+  const disbursements = new Map<string, ObligationDisbursement>();
   for (const p of pays ?? []) {
     if (!p.obligation_id) continue;
+    if (p.kind === "income") {
+      disbursements.set(p.obligation_id, { id: p.id, date: p.date, amount: Number(p.amount), account_id: p.account_id });
+      continue;
+    }
     const from = accCur.get(p.account_id) ?? "COP";
     const to = oblCur.get(p.obligation_id) ?? from;
     const list = payments.get(p.obligation_id) ?? [];
@@ -295,7 +306,7 @@ export const getObligations = cache(async () => {
       list.reduce((s, p) => s + p.value, 0),
       today,
     );
-    return { row: o, summary, payments: list };
+    return { row: o, summary, payments: list, disbursement: disbursements.get(o.id) ?? null };
   });
   return { items, rates };
 });
