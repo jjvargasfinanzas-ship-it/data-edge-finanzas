@@ -276,6 +276,8 @@ export async function createLoan(_: ActionState, fd: FormData): Promise<ActionSt
     return r;
   }
   const v = parsed.data;
+  // Lo que debo se registra en Obligaciones (cuotas, acreedor, desembolso).
+  if (v.direction === "borrowed") return fail("Lo que debes se registra en Obligaciones.");
   const { supabase, today } = await getContext();
   const lent = v.direction === "lent";
   if (v.date > today) return fail("La fecha no puede ser futura.", { date: "Usa hoy o una fecha pasada." });

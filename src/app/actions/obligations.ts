@@ -39,6 +39,48 @@ const obligationSchema = z
 
 type ObligationValues = z.output<typeof obligationSchema>;
 
+/** Desembolso: a qué cuenta entró el dinero de la obligación (opcional). */
+const disbursementSchema = z.object({
+  account_id: z.uuid().nullable(),
+  date: isoDate.nullable(),
+  amount: money.nullable(),
+});
+type Disbursement = z.output<typeof disbursementSchema>;
+
+type Supa = Awaited<ReturnType<typeof getContext>>["supabase"];
+
+/**
+ * Crea, actualiza o quita el movimiento de entrada del desembolso.
+ * Es un movimiento vinculado a la obligación y sin categoría: sube el saldo de la
+ * cuenta y el flujo real, pero no es un ingreso (sale de los análisis de ingresos).
+ */
+async function syncDisbursement(supabase: Supa, obligationId: string, label: string, d: Disbursement) {
+  const { data: existing } = await supabase
+    .from("transactions")
+    .select("id")
+    .eq("obligation_id", obligationId)
+    .eq("kind", "income")
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+  if (!d.account_id || !d.amount || !d.date) {
+    if (existing) return supabase.from("transactions").delete().eq("id", existing.id);
+    return { error: null };
+  }
+  const row = {
+    kind: "income" as const,
+    amount: d.amount,
+    account_id: d.account_id,
+    category_id: null,
+    date: d.date,
+    description: `Desembolso · ${label}`.slice(0, 140),
+    obligation_id: obligationId,
+  };
+  return existing
+    ? supabase.from("transactions").update(row).eq("id", existing.id)
+    : supabase.from("transactions").insert(row);
+}
+
 /** Crea, actualiza o quita el programado que lleva las cuotas al flujo de caja y al calendario. */
 async function syncPlanned(
   supabase: Awaited<ReturnType<typeof getContext>>["supabase"],
@@ -90,10 +132,34 @@ export async function saveObligation(_: ActionState, fd: FormData): Promise<Acti
     account_id: optStr(fd, "account_id"),
     notes: optStr(fd, "notes"),
   });
+  const dParsed = disbursementSchema.safeParse({
+    account_id: optStr(fd, "disbursement_account_id"),
+    date: optStr(fd, "disbursement_date"),
+    amount: optStr(fd, "disbursement_account_id") ? (amountOf(fd, "disbursement_amount") ?? null) : null,
+  });
   if (!parsed.success) return zodFail(parsed.error);
+  if (!dParsed.success) {
+    const r = zodFail(dParsed.error);
+    const map: Record<string, string> = { account_id: "disbursement_account_id", date: "disbursement_date", amount: "disbursement_amount" };
+    r.fieldErrors = Object.fromEntries(Object.entries(r.fieldErrors ?? {}).map(([k, m]) => [map[k] ?? k, m]));
+    return r;
+  }
   const v = parsed.data;
-  const { supabase } = await getContext();
+  const d = dParsed.data;
+  const { supabase, today } = await getContext();
   const id = optStr(fd, "id");
+
+  // Desembolso: cuenta en la misma moneda, fecha no futura y valor obligatorio.
+  if (d.account_id) {
+    if (!d.amount) return fail("Escribe cuánto dinero entró.", { disbursement_amount: "Escribe el valor recibido" });
+    if (!d.date) return fail("Escribe la fecha del desembolso.", { disbursement_date: "Fecha requerida" });
+    if (d.date > today) return fail("El desembolso no puede tener fecha futura.", { disbursement_date: "Usa la fecha en que llegó el dinero" });
+    const { data: acc } = await supabase.from("accounts").select("currency, type").eq("id", d.account_id).single();
+    if (!acc || acc.type === "credit_card" || acc.type === "loan_receivable" || acc.type === "loan_payable")
+      return fail("La cuenta del desembolso no es válida.", { disbursement_account_id: "Elige otra cuenta" });
+    if (acc.currency !== v.currency)
+      return fail("La cuenta del desembolso debe estar en la misma moneda de la obligación.", { disbursement_account_id: `Esta cuenta está en ${acc.currency}` });
+  }
 
   // La cuenta de pago define la moneda de las cuotas en el flujo.
   if (v.account_id) {
@@ -122,14 +188,28 @@ export async function saveObligation(_: ActionState, fd: FormData): Promise<Acti
     planned_item_id: plannedId,
   };
 
-  const { error } = id
-    ? await supabase.from("obligations").update(row).eq("id", id)
-    : await supabase.from("obligations").insert(row);
-  if (error) {
+  const { data: saved, error } = id
+    ? await supabase.from("obligations").update(row).eq("id", id).select("id").single()
+    : await supabase.from("obligations").insert(row).select("id").single();
+  if (error || !saved) {
     if (!id && plannedId) await supabase.from("planned_items").delete().eq("id", plannedId);
     return dbError(error);
   }
-  return done(id ? "Obligación actualizada" : v.account_id ? "Obligación creada. Sus cuotas ya están en tu flujo de caja." : "Obligación creada");
+
+  const { error: de } = await syncDisbursement(supabase, saved.id, `${v.creditor} · ${v.concept}`, d);
+  if (de) {
+    if (!id) {
+      await supabase.from("obligations").delete().eq("id", saved.id);
+      if (plannedId) await supabase.from("planned_items").delete().eq("id", plannedId);
+    }
+    return dbError(de);
+  }
+
+  if (id) return done("Obligación actualizada");
+  const parts = ["Obligación creada."];
+  if (d.account_id) parts.push("El desembolso ya está en tu cuenta (no cuenta como ingreso).");
+  if (v.account_id) parts.push("Sus cuotas ya están en tu flujo de caja.");
+  return done(parts.join(" "));
 }
 
 export async function setObligationStatus(id: string, status: "active" | "cancelled"): Promise<ActionState> {
@@ -145,6 +225,9 @@ export async function deleteObligation(id: string): Promise<ActionState> {
   if (!uuid.safeParse(id).success) return fail("Obligación no válida");
   const { supabase } = await getContext();
   const { data } = await supabase.from("obligations").select("planned_item_id").eq("id", id).single();
+  // El desembolso solo existe por la obligación: si quedara suelto se leería como un ingreso.
+  const { error: de } = await supabase.from("transactions").delete().eq("obligation_id", id).eq("kind", "income");
+  if (de) return dbError(de);
   const { error } = await supabase.from("obligations").delete().eq("id", id);
   if (error) return dbError(error);
   if (data?.planned_item_id) await supabase.from("planned_items").delete().eq("id", data.planned_item_id);
