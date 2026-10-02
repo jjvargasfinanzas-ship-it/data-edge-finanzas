@@ -55,7 +55,7 @@ export default async function ConfiguracionPage() {
         </Card>
 
         <Card>
-          <CardHeader title="Préstamos y obligaciones" subtitle="Clasificación de tus acreedores. Se usa para organizar y analizar el módulo de Obligaciones." />
+          <CardHeader title="Obligaciones: clasificación de acreedores" subtitle="Subcategorías de Obligaciones financieras. Organizan y analizan lo que debes; no son categorías de ingreso ni gasto." />
           <div className="p-5">
             <ObligationClassesManager items={classes.map((c) => ({ id: c.id, name: c.name, is_archived: c.is_archived, count: classCount.get(c.id) ?? 0 }))} />
           </div>
