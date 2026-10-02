@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { LoanPaymentButton, NewTransactionButton } from "@/components/app/open-buttons";
-import { PendingList } from "@/components/app/pending-list";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/misc";
 import { AccountIcon } from "@/components/ui/icons";
 import { StatRows, type StatRow } from "@/components/ui/stat-rows";
 import { cn } from "@/components/ui/cn";
 import { getAccounts, getCashflow, getCategories, getContext } from "@/lib/data";
 import { ACCOUNT_TYPE_LABELS } from "@/lib/constants";
-import { addDays, formatMedium } from "@/lib/dates";
+import { endOfMonth, formatMedium } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { AccountActions } from "./actions";
 import { AccountMoves, type AccountMove } from "./moves";
+import { PendingSection } from "./pending-section";
 
 export const metadata: Metadata = { title: "Cuenta" };
 
@@ -23,7 +23,8 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
   const [accounts, categories, flow, { data: txs }] = await Promise.all([
     getAccounts(),
     getCategories(),
-    getCashflow(addDays(today, 60)),
+    // Pendientes hasta fin de mes (incluye vencidos sin confirmar)
+    getCashflow(endOfMonth(today)),
     supabase
       .from("transactions")
       .select("id, kind, date, amount, to_amount, account_id, to_account_id, category_id, description, notes, planned_item_id, planned_date, obligation_id")
@@ -140,6 +141,11 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
   const programmed = flow.occurrences.filter(
     (o) => (o.accountId === id || o.toAccountId === id) && !(o.flow === "card_estimate" && !isCard),
   );
+  // Entra a esta cuenta: ingresos programados en ella o transferencias/pagos hacia ella.
+  const incoming = (o: (typeof programmed)[number]) => o.toAccountId === id || (o.accountId === id && o.flow === "income");
+  const toReceive = programmed.filter(incoming);
+  const toPay = programmed.filter((o) => !incoming(o));
+  const monthEnd = formatMedium(endOfMonth(today));
 
   return (
     <>
@@ -157,70 +163,80 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
         actions={<AccountActions account={acc} />}
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <div className="space-y-4">
-          <Card className={cn("border-transparent p-4 sm:p-5", isCard || payable ? "bg-pastel-navy" : "bg-pastel-teal")}>
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[13px] font-semibold text-ink-2">{receivable ? "Me debe" : payable ? "Debo" : isCard ? "Deuda actual" : "Saldo real hoy"}</p>
-              <Badge tone="positive">Real</Badge>
-            </div>
-            <p className={cn("num mt-1 text-2xl font-semibold whitespace-nowrap", !isCard && !loan && acc.balance < 0 && "text-negative")}>
-              {money(loan ? loanPending : isCard ? Math.max(0, -acc.balance) : acc.balance)}
-            </p>
-            {loan ? (
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <LoanPaymentButton loan={acc} size="sm">
-                  {receivable ? "Me abonaron" : "Abonar"}
-                </LoanPaymentButton>
-                <span className="text-xs text-muted">No cuenta como ingreso ni gasto.</span>
-              </div>
-            ) : (
-            <div className="mt-3 flex flex-wrap gap-2">
-              <NewTransactionButton initial={{ kind: "expense", account_id: acc.id }} variant="secondary" size="sm">
-                Gasto
-              </NewTransactionButton>
-              <NewTransactionButton initial={{ kind: "income", account_id: acc.id }} variant="secondary" size="sm">
-                Ingreso
-              </NewTransactionButton>
-            </div>
-            )}
-          </Card>
-
-          <Card className="p-4 sm:p-5">
-            <h2 className="font-semibold text-ink">¿De dónde sale este saldo?</h2>
-            <StatRows rows={loan ? loanRows : composition} className="mt-1" />
-            <p className="mt-2 text-xs text-muted">
-              Solo cuenta movimientos con fecha hasta hoy. Si el saldo inicial no es correcto, corrígelo con <strong>Editar</strong> arriba.
-            </p>
-          </Card>
-
-          <Card className="p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="font-semibold text-ink">Programado en esta cuenta</h2>
-              <Badge tone="neutral">Estimado</Badge>
-            </div>
-            <p className="mt-0.5 text-xs text-muted">Próximos 60 días. Aún no afecta el saldo: confírmalo cuando ocurra, o edítalo/elimínalo.</p>
-            <div className="mt-1">
-              <PendingList
-                items={programmed}
-                baseCurrency={acc.currency}
-                group="status"
-                empty={<p className="py-3 text-sm text-muted">No hay nada programado.</p>}
-              />
-            </div>
-          </Card>
+      <div className="space-y-4">
+    <Card className={cn("border-transparent p-4 sm:p-5", isCard || payable ? "bg-pastel-navy" : "bg-pastel-teal")}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[13px] font-semibold text-ink-2">{receivable ? "Me debe" : payable ? "Debo" : isCard ? "Deuda actual" : "Saldo real hoy"}</p>
+        <Badge tone="positive">Real</Badge>
+      </div>
+      <p className={cn("num mt-1 text-2xl font-semibold whitespace-nowrap", !isCard && !loan && acc.balance < 0 && "text-negative")}>
+        {money(loan ? loanPending : isCard ? Math.max(0, -acc.balance) : acc.balance)}
+      </p>
+      {loan ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <LoanPaymentButton loan={acc} size="sm">
+            {receivable ? "Me abonaron" : "Abonar"}
+          </LoanPaymentButton>
+          <span className="text-xs text-muted">No cuenta como ingreso ni gasto.</span>
         </div>
+      ) : (
+      <div className="mt-3 flex flex-wrap gap-2">
+        <NewTransactionButton initial={{ kind: "expense", account_id: acc.id }} variant="secondary" size="sm">
+          Gasto
+        </NewTransactionButton>
+        <NewTransactionButton initial={{ kind: "income", account_id: acc.id }} variant="secondary" size="sm">
+          Ingreso
+        </NewTransactionButton>
+      </div>
+      )}
+    </Card>
 
+
+        {/* 1. Movimientos: lo primero que se consulta */}
         <Card>
           <div className="flex items-baseline justify-between gap-2 px-4 pt-4 pb-2 sm:px-5">
-            <h2 className="font-semibold text-ink">Movimientos reales</h2>
-            <span className="text-xs text-muted">Toca uno para corregirlo</span>
+            <h2 className="font-semibold text-ink">Movimientos</h2>
+            <span className="text-xs text-muted">Por día · toca uno para corregirlo</span>
           </div>
           {moves.length ? (
-            <AccountMoves moves={moves.slice(0, 200)} currency={acc.currency} />
+            <AccountMoves moves={moves.slice(0, 200)} currency={acc.currency} today={today} />
           ) : (
             <EmptyState title="Esta cuenta aún no tiene movimientos." />
           )}
+        </Card>
+
+        {/* 2. Pendientes del mes: aún no afectan el saldo */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <PendingSection
+            title={isCard ? "Pagos por recibir" : "Ingresos por confirmar"}
+            subtitle={`Hasta el ${monthEnd}, con los vencidos sin confirmar. No suman al saldo hasta que los confirmes.`}
+            items={toReceive}
+            currency={acc.currency}
+            empty="No hay ingresos pendientes este mes."
+          />
+          <PendingSection
+            title={isCard ? "Pagos por realizar" : "Gastos por realizar"}
+            subtitle={`Hasta el ${monthEnd}, con los vencidos sin pagar. No restan del saldo hasta que los confirmes.`}
+            items={toPay}
+            currency={acc.currency}
+            empty="No hay gastos pendientes este mes."
+          />
+        </div>
+
+        {/* 3. Composición del saldo, plegada */}
+        <Card className="p-0">
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3.5 sm:px-5 [&::-webkit-details-marker]:hidden">
+              <span className="font-semibold text-ink">¿De dónde sale este saldo?</span>
+              <ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" aria-hidden />
+            </summary>
+            <div className="px-4 pb-4 sm:px-5">
+              <StatRows rows={loan ? loanRows : composition} />
+              <p className="mt-2 text-xs text-muted">
+                Solo cuenta movimientos con fecha hasta hoy. Si el saldo inicial no es correcto, corrígelo con <strong>Editar</strong> arriba.
+              </p>
+            </div>
+          </details>
         </Card>
       </div>
     </>
