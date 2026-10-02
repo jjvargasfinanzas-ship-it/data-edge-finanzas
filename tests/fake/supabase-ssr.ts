@@ -14,7 +14,11 @@ const uuid = () => `00000000-0000-4000-9000-${String(++seq).padStart(12, "0")}`;
 function seed() {
   const db: Record<string, Row[]> = {
     profiles: [], accounts: [], categories: [], planned_items: [], transactions: [], calendar_events: [], exchange_rates: [], audit_logs: [], planned_occurrence_status: [],
+    obligations: [], obligation_categories: [],
   };
+  ["Entidades financieras", "Establecimientos de comercio", "Personas naturales", "Empresas", "Tarjetas de crédito", "Otros"].forEach((name, i) =>
+    db.obligation_categories.push({ id: uuid(), user_id: USER, name, icon: null, sort_order: i + 1, is_archived: false, created_at: now(), updated_at: now() }),
+  );
   const onboarded = process.env.DE_FAKE_ONBOARDED !== "0";
   db.profiles.push({
     id: USER, first_name: "Juan", last_name: "Vargas", email: "juan@ejemplo.co", country: "CO", city: "Medellín", base_currency: "COP",
@@ -197,11 +201,12 @@ class Query {
     const base: Row = { id: uuid(), user_id: USER, created_at: now(), updated_at: now() };
     const t: Record<string, Row> = {
       accounts: { institution: null, currency: "COP", opening_balance: 0, opening_date: "2026-09-24", color: null, include_in_net_worth: true, is_archived: false, sort_order: 0, credit_limit: null, statement_day: null, due_day: null },
-      transactions: { to_account_id: null, to_amount: null, category_id: null, description: null, notes: null, planned_item_id: null, planned_date: null, date: "2026-09-24" },
+      transactions: { obligation_id: null, to_account_id: null, to_amount: null, category_id: null, description: null, notes: null, planned_item_id: null, planned_date: null, date: "2026-09-24" },
       planned_items: { to_account_id: null, category_id: null, frequency: "monthly", end_date: null, is_active: true, notes: null },
       categories: { parent_id: null, icon: null, color: null, is_archived: false, sort_order: 99 },
       calendar_events: { event_time: null, frequency: "once", end_date: null, remind_days_before: 0, notes: null },
       exchange_rates: { source: "manual" },
+      obligations: { status: "active", interest_rate: null, installment_amount: null, account_id: null, category_id: null, planned_item_id: null, class_id: null, notes: null },
     };
     return { ...base, ...(t[this.table] ?? {}), ...r };
   }
