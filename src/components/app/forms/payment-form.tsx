@@ -31,8 +31,9 @@ export function PaymentForm({ initial, onDone }: { initial: PaymentInitial; onDo
   const [state, action, pending] = useActionState(registerObligationPayment, initialState);
   useFormResult(state, onDone);
   const fe = state.fieldErrors ?? {};
-  const payable = accounts.filter((a) => !isLoan(a.type) && a.type !== "investment");
-  const [accountId, setAccountId] = useState(initial.accountId ?? payable.find((a) => a.type === "bank_savings" || a.type === "bank_checking")?.id ?? payable[0]?.id ?? "");
+  const payable = accounts.filter((a) => !a.is_archived && !isLoan(a.type) && a.type !== "investment");
+  const defaultAcc = payable.some((a) => a.id === initial.accountId) ? initial.accountId : null;
+  const [accountId, setAccountId] = useState(defaultAcc ?? payable.find((a) => a.type === "bank_savings" || a.type === "bank_checking")?.id ?? payable[0]?.id ?? "");
   const acc = accounts.find((a) => a.id === accountId);
   const cur = acc?.currency ?? initial.currency;
   const [amountKey, setAmountKey] = useState(0);

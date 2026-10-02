@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { createLoan } from "@/app/actions/finance";
 import { initialState } from "@/app/actions/types";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Segmented, Select, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { isLoan } from "@/lib/constants";
 import { CURRENCIES } from "@/lib/money";
 import { AmountInput } from "./amount-input";
@@ -14,11 +15,12 @@ import { useAppData } from "../app-data";
 export type LoanInitial = Partial<{ direction: "lent" | "borrowed" }>;
 
 /** Registrar un préstamo: no es gasto ni ingreso, es plata que va a volver (o que debo devolver). */
-export function LoanForm({ initial, onDone }: { initial: LoanInitial; onDone: () => void }) {
+export function LoanForm({ onDone }: { initial: LoanInitial; onDone: () => void }) {
   const { accounts, today } = useAppData();
   const [state, action, pending] = useActionState(createLoan, initialState);
   useFormResult(state, onDone);
-  const [direction, setDirection] = useState<"lent" | "borrowed">(initial.direction ?? "lent");
+  // Lo que debo vive en Obligaciones: aquí solo se registra lo que presté.
+  const direction = "lent" as "lent" | "borrowed";
   const own = accounts.filter((a) => !a.is_archived && !isLoan(a.type) && a.type !== "credit_card");
   const [accountId, setAccountId] = useState((own.find((a) => a.type === "bank_savings" || a.type === "bank_checking") ?? own[0])?.id ?? "");
   const [currency, setCurrency] = useState("COP");
@@ -29,19 +31,13 @@ export function LoanForm({ initial, onDone }: { initial: LoanInitial; onDone: ()
 
   return (
     <form action={action} className="space-y-4">
-      <Segmented
-        name="direction"
-        value={direction}
-        onChange={setDirection}
-        options={[
-          { value: "lent", label: "Yo presté", tone: "out" },
-          { value: "borrowed", label: "Me prestaron", tone: "in" },
-        ]}
-      />
+      <input type="hidden" name="direction" value="lent" />
       <p className="rounded-xl bg-canvas px-3 py-2 text-xs text-ink-2">
-        {lent
-          ? "No es un gasto: la plata sale de tu cuenta pero te la deben. Queda como cuenta por cobrar hasta que te paguen."
-          : "No es un ingreso: la plata entra a tu cuenta pero la debes. Queda como deuda hasta que la pagues."}
+        No es un gasto: la plata sale de tu cuenta pero te la deben. Queda como cuenta por cobrar hasta que te paguen. Si tú debes plata, regístrala en{" "}
+        <Link href="/obligaciones" onClick={onDone} className="font-semibold text-teal-700 hover:underline">
+          Obligaciones
+        </Link>
+        .
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">

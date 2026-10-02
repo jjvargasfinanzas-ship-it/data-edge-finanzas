@@ -29,6 +29,10 @@ export type ObligationInitial = Partial<{
   interest_rate: number | null;
   account_id: string | null;
   notes: string | null;
+  /** Cuenta a la que entró el dinero de la obligación (desembolso). */
+  disbursement_account_id: string | null;
+  disbursement_date: string | null;
+  disbursement_amount: number | null;
 }>;
 
 const FREQS: Frequency[] = ["monthly", "once", "biweekly", "semimonthly", "weekly", "bimonthly", "quarterly", "semiannual", "yearly"];
@@ -50,6 +54,14 @@ export function ObligationForm({ initial, onDone }: { initial: ObligationInitial
   const [cuota, setCuota] = useState("");
   const [firstDue, setFirstDue] = useState(initial.first_due_date ?? today);
   const [accountId, setAccountId] = useState(initial.account_id ?? "");
+  const [disbAccountId, setDisbAccountId] = useState(initial.disbursement_account_id ?? "");
+  // El valor recibido sigue al valor original hasta que la persona lo cambie.
+  const [disbKey, setDisbKey] = useState<string | null>(initial.disbursement_amount ? "saved" : null);
+  const liveDisbKey = disbKey ?? `orig-${original}`;
+  // Recibe el dinero: cuentas propias (no tarjetas, préstamos ni inversión).
+  const receiveIn = accounts.filter(
+    (a) => (!a.is_archived || a.id === initial.disbursement_account_id) && !isLoan(a.type) && a.type !== "credit_card" && a.type !== "investment",
+  );
   const once = frequency === "once";
   const prefix = currency === "COP" ? "$" : currency;
   const decimals = currency !== "COP";
@@ -181,6 +193,47 @@ export function ObligationForm({ initial, onDone }: { initial: ObligationInitial
           ))}
         </Select>
       </Field>
+
+      <div className="space-y-3 rounded-2xl bg-canvas p-4">
+        <Field
+          label="¿A qué cuenta entró el dinero? (opcional)"
+          htmlFor="disbursement_account_id"
+          error={fe.disbursement_account_id}
+          hint={
+            disbAccountId
+              ? "Sube el saldo de esa cuenta como desembolso. No cuenta como ingreso."
+              : "Déjalo así si el dinero no pasó por tus cuentas (deuda antigua, compra a crédito, impuesto)."
+          }
+        >
+          <Select id="disbursement_account_id" name="disbursement_account_id" value={disbAccountId} onChange={(e) => setDisbAccountId(e.target.value)}>
+            <option value="">No entró a mis cuentas</option>
+            {receiveIn.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+                {a.currency !== "COP" ? ` · ${a.currency}` : ""}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        {disbAccountId && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Valor recibido" htmlFor="disbursement_amount" error={fe.disbursement_amount} hint="Si descontaron comisiones o seguros, escribe lo que llegó.">
+              <AmountInput
+                id="disbursement_amount"
+                name="disbursement_amount"
+                decimals={decimals}
+                prefix={prefix}
+                defaultValue={initial.disbursement_amount ?? (original ? parseAmountInput(original) : initial.original_amount)}
+                key={liveDisbKey}
+                onValueChange={() => disbKey === null && setDisbKey(liveDisbKey)}
+              />
+            </Field>
+            <Field label="Fecha del desembolso" htmlFor="disbursement_date" error={fe.disbursement_date}>
+              <Input id="disbursement_date" name="disbursement_date" type="date" required max={today} defaultValue={initial.disbursement_date ?? today} />
+            </Field>
+          </div>
+        )}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
         <Field label="Tasa (opcional)" htmlFor="interest_rate" hint="% efectivo anual">
