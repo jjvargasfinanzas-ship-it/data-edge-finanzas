@@ -44,7 +44,7 @@ export function ObligationActions({
       </ConfirmButton>
       <ConfirmButton
         action={() => deleteObligation(edit.id)}
-        confirmLabel="¿Eliminar? Los pagos quedan en movimientos"
+        confirmLabel="¿Eliminar? Se borra el desembolso; los pagos quedan en movimientos"
         onDone={() => router.push("/obligaciones")}
         className="inline-flex h-8 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-negative hover:bg-negative-50"
       >

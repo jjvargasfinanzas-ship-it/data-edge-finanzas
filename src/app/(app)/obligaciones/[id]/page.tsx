@@ -28,7 +28,7 @@ export default async function ObligacionPage({ params }: { params: Promise<{ id:
   const [{ today }, { items }, accounts] = await Promise.all([getContext(), getObligations(), getAccounts()]);
   const item = items.find((i) => i.row.id === id);
   if (!item) notFound();
-  const { row: o, summary: s, payments } = item;
+  const { row: o, summary: s, payments, disbursement: disb } = item;
   const cur = o.currency as Currency;
   const m = (v: number) => formatMoney(v, cur);
   const accName = new Map(accounts.map((a) => [a.id, a.name]));
@@ -70,6 +70,9 @@ export default async function ObligacionPage({ params }: { params: Promise<{ id:
             interest_rate: o.interest_rate === null ? null : Number(o.interest_rate),
             account_id: o.account_id,
             notes: o.notes,
+            disbursement_account_id: disb?.account_id ?? null,
+            disbursement_date: disb?.date ?? null,
+            disbursement_amount: disb?.amount ?? null,
           }}
           pay={{
             obligationId: o.id,
@@ -220,6 +223,7 @@ export default async function ObligacionPage({ params }: { params: Promise<{ id:
                 ["Periodicidad", s.schedule.length > 1 ? FREQUENCY_LABELS[o.frequency] : "Pago único"],
                 ["Última cuota", formatMedium(s.lastDueDate)],
                 ["Tasa", o.interest_rate !== null ? `${formatPct(Number(o.interest_rate))} E.A.` : "—"],
+                ["Desembolso", disb ? `${m(disb.amount)} a ${accName.get(disb.account_id) ?? "cuenta"} · ${formatMedium(disb.date)}` : "No entró a tus cuentas"],
                 ["Cuenta de pago", o.account_id ? (accName.get(o.account_id) ?? "—") : "Sin cuenta (no entra al flujo)"],
                 ...(o.notes ? [["Notas", o.notes]] : []),
               ].map(([k, v]) => (
