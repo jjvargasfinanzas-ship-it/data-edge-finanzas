@@ -125,7 +125,7 @@ export function AppDataProvider({
       : sheet.initial.type === "credit_card"
         ? "Nueva tarjeta"
         : "Nueva cuenta";
-  if (sheet?.type === "loan") title = "Registrar préstamo";
+  if (sheet?.type === "loan") title = "Préstamo que hice";
   if (sheet?.type === "obligation") title = sheet.initial.id ? "Editar obligación" : "Nueva obligación";
   if (sheet?.type === "payment") title = `Pago · ${sheet.initial.label}`;
   if (sheet?.type === "advance") title = sheet.initial.cardId ? `Avance · ${accounts.find((a) => a.id === sheet.initial.cardId)?.name ?? "tarjeta"}` : "Avance de tarjeta";
