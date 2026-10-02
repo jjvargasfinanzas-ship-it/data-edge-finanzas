@@ -44,6 +44,7 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
   let income = 0;
   let expense = 0;
   let obligations = 0;
+  let disbursed = 0;
   let trIn = 0;
   let trOut = 0;
   let running = acc.balance;
@@ -53,6 +54,9 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
     if (incoming) {
       effect = Number(t.to_amount ?? t.amount);
       trIn += effect;
+    } else if (t.kind === "income" && t.obligation_id) {
+      effect = Number(t.amount);
+      disbursed += effect;
     } else if (t.kind === "income") {
       effect = Number(t.amount);
       income += effect;
@@ -72,7 +76,7 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
     const other = incoming ? accMap.get(t.account_id) : t.to_account_id ? accMap.get(t.to_account_id) : undefined;
     return {
       id: t.id,
-      title: t.description || cat?.name || (t.obligation_id ? "Pago de obligación" : t.kind === "transfer" ? "Transferencia" : "Movimiento"),
+      title: t.description || cat?.name || (t.obligation_id ? (t.kind === "income" ? "Desembolso de obligación" : "Pago de obligación") : t.kind === "transfer" ? "Transferencia" : "Movimiento"),
       subtitle: other ? (incoming ? `desde ${other.name}` : `hacia ${other.name}`) : t.description ? (cat?.name ?? "") : "",
       effect,
       after,
@@ -93,6 +97,7 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
         notes: t.notes,
         planned_item_id: t.planned_item_id,
         planned_date: t.planned_date,
+        obligation_id: t.obligation_id,
       },
     };
   });
@@ -121,6 +126,7 @@ export default async function CuentaPage({ params }: { params: Promise<{ id: str
   ];
   if (income) composition.push({ op: "+", label: isCard ? "Abonos y devoluciones" : "Ingresos", value: money(income), tone: "in" });
   if (expense) composition.push({ op: "−", label: isCard ? "Compras con la tarjeta" : "Gastos", value: money(expense), tone: "out" });
+  if (disbursed) composition.push({ op: "+", label: "Desembolsos de obligaciones", hint: "Dinero prestado: no es ingreso, aumenta lo que debes", value: money(disbursed), tone: "in" });
   if (obligations) composition.push({ op: "−", label: "Pagos de obligaciones", hint: "No son gastos: reducen lo que debes", value: money(obligations), tone: "out" });
   if (trIn) composition.push({ op: "+", label: isCard ? "Pagos recibidos" : "Transferencias recibidas", value: money(trIn), tone: "in" });
   if (trOut) composition.push({ op: "−", label: isCard ? "Avances en efectivo" : "Transferencias enviadas", value: money(trOut), tone: "out" });

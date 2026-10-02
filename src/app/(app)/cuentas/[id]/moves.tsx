@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ArrowLeftRight, CalendarClock, ChevronRight } from "lucide-react";
 import { useAppData } from "@/components/app/app-data";
 import { cn } from "@/components/ui/cn";
@@ -30,19 +31,23 @@ export interface AccountMove {
     notes: string | null;
     planned_item_id: string | null;
     planned_date: string | null;
+    obligation_id: string | null;
   };
 }
 
 /** Movimientos de la cuenta; tocar uno lo abre para corregirlo o eliminarlo. */
 export function AccountMoves({ moves, currency }: { moves: AccountMove[]; currency: Currency }) {
   const { openTransaction } = useAppData();
+  const router = useRouter();
+  // Pagos y desembolsos de obligaciones se gestionan en su obligación.
+  const open = (m: AccountMove) => (m.tx.obligation_id ? router.push(`/obligaciones/${m.tx.obligation_id}`) : openTransaction({ ...m.tx }));
   return (
     <ul className="divide-y divide-line">
       {moves.map((m) => (
         <li key={m.id}>
           <button
             type="button"
-            onClick={() => openTransaction({ ...m.tx })}
+            onClick={() => open(m)}
             className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-canvas sm:px-5"
             aria-label={`Corregir ${m.title}`}
           >
